@@ -79,7 +79,7 @@ public class FileService {
         }
     }
 
-    public void putFile(UploadDataObj uploadData) {
+    public void putFile(UploadDataObj uploadData, String path) {
         // this is just a regular local file or folder
         //String localSourceAbsolutePath = transferFile.getAbsolutePath();
         //JOptionPane.showMessageDialog(null, "hui");
@@ -101,7 +101,7 @@ public class FileService {
         try {
             //System.out.print(sourceResource);
             dataTransferOps.putOperation(localSourceAbsolutePath,
-                    "/tempZone/home/rods/" + uploadData.getFile().getName(), sourceResource, new TransferStatusCallbackListener() {
+                    path + '/' + uploadData.getFile().getName(), sourceResource, new TransferStatusCallbackListener() {
                         @Override
                         public FileStatusCallbackResponse statusCallback(TransferStatus transferStatus) throws JargonException {
                             return null;
@@ -210,6 +210,60 @@ public class FileService {
         } else {
             //log.info("process a local to local move with source...not yet implemented : {}",
             transferFile.getAbsolutePath();
+        }
+    }
+
+
+    public boolean createNewFolder(final String newFolderAbsolutePath) throws Exception {
+
+        if (newFolderAbsolutePath == null || newFolderAbsolutePath.isEmpty()) {
+            throw new Exception("null or empty newFolderAbsolutePath");
+        }
+
+        boolean createSuccessful = false;
+
+        try {
+            IRODSFile newDirectory = irodsFileSystem.getIRODSFileFactory(irodsAccount).instanceIRODSFile(
+                    newFolderAbsolutePath);
+            createSuccessful = newDirectory.mkdirs();
+        } catch (JargonException ex) {
+            //Logger.getLogger(IRODSFileService.class.getName()).log(Level.SEVERE, null, ex);
+            throw new Exception("exception creating new dir", ex);
+        } finally {
+            try {
+                irodsFileSystem.close(irodsAccount);
+            } catch (JargonException ex) {
+                //Logger.getLogger(IRODSFileService.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+
+        return createSuccessful;
+    }
+
+
+    public void deleteFileOrFolderNoForce(final String deleteFileAbsolutePath) throws Exception {
+
+        //log.info("deleteFileOrFolderNoForce");
+
+        if (deleteFileAbsolutePath == null || deleteFileAbsolutePath.isEmpty()) {
+            throw new Exception("null or empty deleteFileAbsolutePath");
+        }
+
+        //log.info("delete path:{}", deleteFileAbsolutePath);
+
+        try {
+            IRODSFile deleteFileOrDir = irodsFileSystem.getIRODSFileFactory(irodsAccount).instanceIRODSFile(
+                    deleteFileAbsolutePath);
+            deleteFileOrDir.delete();
+        } catch (JargonException ex) {
+            //Logger.getLogger(IRODSFileService.class.getName()).log(Level.SEVERE, null, ex);
+            throw new Exception("exception deleting dir:" + deleteFileAbsolutePath, ex);
+        } finally {
+            try {
+                irodsFileSystem.close(irodsAccount);
+            } catch (JargonException ex) {
+                //Logger.getLogger(IRODSFileService.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }
 }

@@ -41,6 +41,7 @@ public class HelloWorldController  {
 
     public HelloWorldController(){
         IRODSZone pro = new IRODSZone("tempZone");
+        pro.path = "/tempZone/home/rods";
         try {
 
             //File fl = new File("C:\\Users\\Bogdan\\Documents\\newTest.txt");
@@ -75,17 +76,20 @@ public class HelloWorldController  {
         String targetIrodsFileAbsolutePath = "C:\\Users\\Bogdan\\Documents\\";
         try {
             //if (IRODSZone.getName() == "tempZone")
-            List<CollectionAndDataObjectListingEntry> files = service.getFilesAndCollectionsUnderParentCollection("/tempZone/home/rods");
-            if (IRODSZone.getName() != "tempZone")
-                files = service.getFilesAndCollectionsUnderParentCollection("/tempZone/home/rods/" + IRODSZone.getName());
+            List<CollectionAndDataObjectListingEntry> files = service.getFilesAndCollectionsUnderParentCollection(IRODSZone.path);
+            //if (IRODSZone.getName() != "tempZone")
+            //    files = service.getFilesAndCollectionsUnderParentCollection("/tempZone/home/rods/" + IRODSZone.getName());
             productFiles = new ArrayList<Object>(files.size());
             for (CollectionAndDataObjectListingEntry entry: files) {
                 //JOptionPane.showMessageDialog(null, "no");
                 IRODSFile f = service.getIRODSFileForPath(entry.getFormattedAbsolutePath());
                 //service.sourceFiles.add((File) f);
                 //service.getFile((File) f, "C:\\Users\\Bogdan\\Documents\\");
-                if (f.isDirectory())
-                    productFiles.add(new IRODSZone(f.getName()));
+                if (f.isDirectory()) {
+                    IRODSZone tmp = new IRODSZone(f.getName());
+                    tmp.path = IRODSZone.path + "/" + tmp.getName();
+                    productFiles.add(tmp);
+                }
                 else
                     productFiles.add(new ProductFile(f.getName(), (File) f));
                 //break;
@@ -94,6 +98,7 @@ public class HelloWorldController  {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        IRODSZone.productFiles = productFiles;
         return productFiles;
     }
 
@@ -120,7 +125,7 @@ public class HelloWorldController  {
             return pf;
         }
         files.add(newName);
-/*
+
         try {
             file.createNewFile();
         }
@@ -134,11 +139,12 @@ public class HelloWorldController  {
         }
         catch (Exception e) {
         }
-        */
-        service.putFile(new UploadDataObj(file));
+
+        service.putFile(new UploadDataObj(file), product.path);
         product.getProductFiles().add(pf);
         return pf;
     }
+
 
     @PutChild
     public ProductFile upload(ProductFile pf, byte[] bytes) {
@@ -151,33 +157,65 @@ public class HelloWorldController  {
         catch (Exception e) {
         }
         UploadDataObj obj = new UploadDataObj(pf.getFile());
-        service.putFile(obj);
+        //service.putFile(obj);
         return pf;
     }
 
 
     @MakeCollection
-    public IRODSZone createAndSaveFolder(HelloWorldController root, String newName) {
-        //Transaction tx = SessionManager.session().beginTransaction();
-        IRODSZone zone = new IRODSZone(newName);
-        return zone;
+    public IRODSZone createFolder(IRODSZone zone, String newName) {
+        IRODSZone newZone = new IRODSZone(newName);
+        newZone.path = zone.path + "/" + newName;
+        zone.productFiles.add(newZone);
+        try {
+            service.createNewFolder(newZone.path);
+        }
+        catch (Exception ex) {
+        }
+        return newZone;
+    }
+
+    @ContentLength
+    public Long getContentLength(ProductFile file) {
+        return file.getFile().length();
+    }
+
+    @Delete
+    public void pretendToDeleteImagesFolder(ProductFile file) {
+        try {
+            service.deleteFileOrFolderNoForce(file.getFile().getPath());
+        }
+        catch (Exception ex){
+
+        }
+    }
+    @Delete
+    public void pretendToDeleteImagesFolder(IRODSZone zone) {
+        try {
+            service.deleteFileOrFolderNoForce(zone.path);
+        }
+        catch (Exception ex){
+
+        }
     }
 
 
     public class IRODSZone {
         private String name;
 
-        public List<ProductFile> productFiles = new ArrayList<ProductFile>();
+        public List<Object> productFiles = new ArrayList<Object>();
 
         public IRODSZone(String name) {
             this.name = name;
         }
 
+        public String path;
+
         public String getName() {
             return name;
         }
 
-        public List<ProductFile> getProductFiles() {
+        public List<Object> getProductFiles() {
             return productFiles;
         }
     }
