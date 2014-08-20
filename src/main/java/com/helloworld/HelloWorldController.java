@@ -21,9 +21,7 @@ package com.helloworld;
 import io.milton.annotations.*;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 import org.apache.commons.io.FileUtils;
 import org.irods.jargon.core.pub.io.IRODSFile;
@@ -199,6 +197,54 @@ public class HelloWorldController  {
         }
     }
 
+    @Move
+    public void move(ProductFile pf, IRODSZone newZone, String newName) {
+        String str = pf.getFile().getParent();
+        for (IRODSZone zone:zones)
+        {
+            if (zone.path == str)
+            {
+                zone.productFiles.remove(pf);
+                break;
+            }
+        }
+        newZone.productFiles.add(pf);
+        try {
+            service.moveIRODSFileUnderneathNewParent(pf.getFile().getAbsolutePath(), newZone.path + "/" + newName);
+        }
+        catch (Exception ex) {
+        }
+    }
+
+    @Move
+    public void move(IRODSZone zn, IRODSZone newZone, String newName) {
+        String str = zn.path;
+        int temp = 0;
+        for (int i = 0; i < str.length(); i++)
+        {
+            if (str.charAt(str.length() - 1 - i) == '/') {
+                temp = str.length() - 1 - i;
+                break;
+            }
+        }
+        String parentPath = str.substring(0, temp);
+        for (IRODSZone zone:zones)
+        {
+            if (zone.path == parentPath)
+            {
+                zone.productFiles.remove(zn);
+                break;
+            }
+        }
+        newZone.productFiles.add(zn);
+        try {
+            service.moveIRODSFileUnderneathNewParent(zn.path, newZone.path + "/" + newName);
+        }
+        catch (Exception ex) {
+        }
+    }
+
+    private static List<IRODSZone> zones = new ArrayList<IRODSZone>();
 
     public class IRODSZone {
         private String name;
@@ -207,6 +253,7 @@ public class HelloWorldController  {
 
         public IRODSZone(String name) {
             this.name = name;
+            HelloWorldController.zones.add(this);
         }
 
         public String path;

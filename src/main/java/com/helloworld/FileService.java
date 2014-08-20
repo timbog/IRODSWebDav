@@ -266,6 +266,39 @@ public class FileService {
             }
         }
     }
+
+    public void moveIRODSFileUnderneathNewParent(final String currentAbsolutePath, final String newAbsolutePath)
+            throws Exception {
+
+        //log.info("moveIRODSFileUnderneathNewParent");
+
+        if (currentAbsolutePath == null || currentAbsolutePath.isEmpty()) {
+            throw new Exception("null or empty currentAbsolutePath");
+        }
+
+        if (newAbsolutePath == null || newAbsolutePath.isEmpty()) {
+            throw new Exception("null or empty newAbsolutePath");
+        }
+
+        //log.info("currentAbsolutePath:{}", currentAbsolutePath);
+        //log.info("newAbsolutePath:{}", newAbsolutePath);
+
+        try {
+            DataTransferOperations dataTransferOperations = irodsFileSystem.getIRODSAccessObjectFactory()
+                    .getDataTransferOperations(irodsAccount);
+            dataTransferOperations.move(currentAbsolutePath, newAbsolutePath);
+        } catch (JargonException ex) {
+            //Logger.getLogger(IRODSFileService.class.getName()).log(Level.SEVERE, null, ex);
+            throw new Exception("exception moving file", ex);
+        } finally {
+            try {
+                irodsFileSystem.close(irodsAccount);
+            } catch (JargonException ex) {
+                //Logger.getLogger(IRODSFileService.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
 }
+
 
 
