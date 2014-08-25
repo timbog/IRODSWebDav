@@ -21,12 +21,13 @@ package com.helloworld;
 import io.milton.annotations.*;
 
 import java.io.*;
+import java.text.ParseException;
 import java.util.*;
 
 import org.apache.commons.io.FileUtils;
 import org.irods.jargon.core.pub.io.IRODSFile;
 import org.irods.jargon.core.query.CollectionAndDataObjectListingEntry;
-
+import java.text.SimpleDateFormat;
 import javax.swing.JOptionPane;
 
 @ResourceController
@@ -220,27 +221,58 @@ public class HelloWorldController  {
     public void move(IRODSZone zn, IRODSZone newZone, String newName) {
         String str = zn.path;
         int temp = 0;
-        for (int i = 0; i < str.length(); i++)
-        {
+        for (int i = 0; i < str.length(); i++) {
             if (str.charAt(str.length() - 1 - i) == '/') {
                 temp = str.length() - 1 - i;
                 break;
             }
         }
         String parentPath = str.substring(0, temp);
-        for (IRODSZone zone:zones)
-        {
-            if (zone.path == parentPath)
-            {
+        /*for (IRODSZone zone : zones) {
+            if (zone.path == parentPath) {
                 zone.productFiles.remove(zn);
                 break;
             }
-        }
-        newZone.productFiles.add(zn);
+        }*/
         try {
-            service.moveIRODSFileUnderneathNewParent(zn.path, newZone.path + "/" + newName);
+            //service.moveIRODSFileUnderneathNewParent(zn.path, newZone.path + "/" + newName);
+            service.createNewFolder(newZone.path + "/" + newName);
+            moveFiles(zn, newZone.path + "/" + newName);
+            service.deleteFileOrFolderNoForce(zn.path);
         }
         catch (Exception ex) {
+        }
+    }
+    @ModifiedDate
+    public Date getModifiedDate(ProductFile pf) {
+       SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+        try {
+            return sdf.parse(sdf.format(pf.getFile().lastModified()));
+        }
+        catch (ParseException ex) {
+        }
+        return null;
+    }
+
+    private void moveFiles(IRODSZone oldZone, String newZonePath) throws Exception
+    {
+        List<Object> list = this.getProductFiles(oldZone);
+        for (Object entry:list) {
+            String str = entry.getClass().getName();
+            if (entry.getClass().getName() == "com.helloworld.HelloWorldController$ProductFile") {
+                ProductFile pf = (ProductFile) entry;
+                this.getFile(pf);
+                service.putFile(new UploadDataObj(new File("C:\\Users\\Bogdan\\Documents\\" + pf.getFile().getName())), newZonePath);
+            }
+            if (entry.getClass().getName() == "com.helloworld.HelloWorldController$IRODSZone") {
+                IRODSZone zn = (IRODSZone) entry;
+                try {
+                    service.createNewFolder(newZonePath + "/" + zn.getName());
+                }
+                catch (Exception ex) {
+                }
+                moveFiles(zn, newZonePath + "/" + zn.getName());
+            }
         }
     }
 
