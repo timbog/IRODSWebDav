@@ -86,6 +86,7 @@ public class HelloWorldController  {
                 //service.getFile((File) f, "C:\\Users\\Bogdan\\Documents\\");
                 if (f.isDirectory()) {
                     IRODSZone tmp = new IRODSZone(f.getName());
+                    tmp.modified = f.lastModified();
                     tmp.path = IRODSZone.path + "/" + tmp.getName();
                     productFiles.add(tmp);
                 }
@@ -253,6 +254,16 @@ public class HelloWorldController  {
         }
         return null;
     }
+    @ModifiedDate
+    public Date getModifiedDate(IRODSZone zn) {
+        SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+        try {
+            return sdf.parse(sdf.format(zn.modified));
+        }
+        catch (ParseException ex) {
+        }
+        return null;
+    }
 
     private void moveFiles(IRODSZone oldZone, String newZonePath) throws Exception
     {
@@ -280,6 +291,8 @@ public class HelloWorldController  {
 
     public class IRODSZone {
         private String name;
+
+        private long modified;
 
         public List<Object> productFiles = new ArrayList<Object>();
 
