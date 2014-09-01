@@ -15,7 +15,12 @@
         <init-param>
             <param-name>controllerPackagesToScan</param-name>
             <param-value>com.helloworld</param-value>
-        </init-param>		
+        </init-param>
+
+        <init-param>
+            <param-name>authenticationHandlers</param-name>
+            <param-value>com.helloworld.IRODSAuthHandler</param-value>
+        </init-param>
         <!--
         <init-param>
             <param-name>contextPath</param-name>
