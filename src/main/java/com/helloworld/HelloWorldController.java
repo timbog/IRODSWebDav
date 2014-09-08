@@ -104,9 +104,9 @@ public class HelloWorldController  {
 
     @Get
     public InputStream getFile(ProductFile file) throws IOException {
-        String targetIrodsFileAbsolutePath = "C:\\Users\\Bogdan\\Documents\\";
+        String targetIrodsFileAbsolutePath = System.getProperty("java.io.tmpdir");
         try {
-            service.getFile((File) file.file, "C:\\Users\\Bogdan\\Documents\\");
+            service.getFile((File) file.file, targetIrodsFileAbsolutePath);
         }
         catch (Throwable t) {
             t.printStackTrace();
@@ -119,7 +119,7 @@ public class HelloWorldController  {
 
     @PutChild
     public ProductFile upload(IRODSZone product, String newName, byte[] bytes){
-        File file = new File("C:\\Users\\Bogdan\\Documents\\tmp\\" + newName);
+        File file = new File(System.getProperty("java.io.tmpdir") + newName);
         ProductFile pf = new ProductFile(newName, file);
         if (bytes == null || bytes.length == 0 || files.contains(newName)) {
             return pf;
@@ -273,7 +273,7 @@ public class HelloWorldController  {
             if (entry.getClass().getName() == "com.helloworld.HelloWorldController$ProductFile") {
                 ProductFile pf = (ProductFile) entry;
                 this.getFile(pf);
-                service.putFile(new UploadDataObj(new File("C:\\Users\\Bogdan\\Documents\\" + pf.getFile().getName())), newZonePath);
+                service.putFile(new UploadDataObj(new File(System.getProperty("java.io.tmpdir") + pf.getFile().getName())), newZonePath);
             }
             if (entry.getClass().getName() == "com.helloworld.HelloWorldController$IRODSZone") {
                 IRODSZone zn = (IRODSZone) entry;
