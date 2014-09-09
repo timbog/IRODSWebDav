@@ -220,6 +220,7 @@ public class HelloWorldController  {
 
     @Move
     public void move(IRODSZone zn, IRODSZone newZone, String newName) {
+
         String str = zn.path;
         int temp = 0;
         for (int i = 0; i < str.length(); i++) {
@@ -229,12 +230,15 @@ public class HelloWorldController  {
             }
         }
         String parentPath = str.substring(0, temp);
-        /*for (IRODSZone zone : zones) {
-            if (zone.path == parentPath) {
-                zone.productFiles.remove(zn);
-                break;
+        //boolean a = (parentPath == newZone.path);
+        if (parentPath.equals(newZone.path)) {
+            try {
+                service.renameIRODSFileOrDirectory(zn.path, newName);
             }
-        }*/
+            catch (Exception ex) {
+            }
+            return;
+        }
         try {
             //service.moveIRODSFileUnderneathNewParent(zn.path, newZone.path + "/" + newName);
             service.createNewFolder(newZone.path + "/" + newName);
@@ -268,6 +272,7 @@ public class HelloWorldController  {
     private void moveFiles(IRODSZone oldZone, String newZonePath) throws Exception
     {
         List<Object> list = this.getProductFiles(oldZone);
+
         for (Object entry:list) {
             String str = entry.getClass().getName();
             if (entry.getClass().getName() == "com.helloworld.HelloWorldController$ProductFile") {

@@ -41,7 +41,7 @@ public class FileService {
     public FileService()
     {
 
-        irodsAccount = new IRODSAccount("192.168.6.130",1247,"rods","rods","","tempZone","demoResc");
+        irodsAccount = new IRODSAccount("192.168.6.131",1247,"rods","rods","","tempZone","demoResc");
 
         try {
             irodsFileSystem = new IRODSFileSystem();
@@ -297,6 +297,50 @@ public class FileService {
                 //Logger.getLogger(IRODSFileService.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+    }
+    public String renameIRODSFileOrDirectory(final String irodsCurrentAbsolutePath, final String newFileOrCollectionName)
+            throws Exception {
+
+        if (irodsCurrentAbsolutePath == null || irodsCurrentAbsolutePath.isEmpty()) {
+            throw new Exception("null or empty irodsCurrentAbsolutePath");
+        }
+
+        if (newFileOrCollectionName == null || newFileOrCollectionName.isEmpty()) {
+            throw new Exception("null or empty newFileOrCollectionName");
+        }
+
+        //log.info("rename of IRODSFileOrDirectory, current absPath:{}", irodsCurrentAbsolutePath);
+        //log.info("newFileOrCollectionName:{}", newFileOrCollectionName);
+
+        String newPath = "";
+
+        try {
+
+            IRODSFileFactory irodsFileFactory = irodsFileSystem.getIRODSFileFactory(irodsAccount);
+            IRODSFile sourceFile = irodsFileFactory.instanceIRODSFile(irodsCurrentAbsolutePath);
+            StringBuilder newPathSb = new StringBuilder();
+            newPathSb.append(sourceFile.getParent());
+            newPathSb.append("/");
+            newPathSb.append(newFileOrCollectionName);
+
+            newPath = newPathSb.toString();
+
+            DataTransferOperations dataTransferOperations = irodsFileSystem.getIRODSAccessObjectFactory()
+                    .getDataTransferOperations(irodsAccount);
+            dataTransferOperations.move(irodsCurrentAbsolutePath, newPath);
+           //log.info("move completed");
+        } catch (JargonException ex) {
+            //Logger.getLogger(IRODSFileService.class.getName()).log(Level.SEVERE, null, ex);
+            throw new Exception("exception moving file", ex);
+        } finally {
+            try {
+                irodsFileSystem.close(irodsAccount);
+            } catch (JargonException ex) {
+                //Logger.getLogger(IRODSFileService.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+
+        return newPath;
     }
 }
 
