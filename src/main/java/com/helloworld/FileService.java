@@ -41,7 +41,7 @@ public class FileService {
     public FileService()
     {
 
-        irodsAccount = new IRODSAccount("192.168.6.134",1247,"rods","rods","","tempZone","demoResc");
+        irodsAccount = new IRODSAccount("192.168.6.135",1247,"rods","rods","","tempZone","demoResc");
 
         try {
             irodsFileSystem = new IRODSFileSystem();
