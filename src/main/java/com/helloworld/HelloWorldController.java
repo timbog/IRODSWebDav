@@ -32,7 +32,7 @@ import javax.swing.JOptionPane;
 
 @ResourceController
 public class HelloWorldController  {
-    private FileService service = new FileService();
+    private com.helloworld.FileService service = new FileService();
 
     private static org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger(HelloWorldController.class);
 
@@ -202,6 +202,14 @@ public class HelloWorldController  {
     @Move
     public void move(ProductFile pf, IRODSZone newZone, String newName) {
         String str = pf.getFile().getParent();
+        if (str.equals(newZone.path)) {
+            try {
+                service.renameIRODSFileOrDirectory(str +  '/' + pf.getName(), newName);
+            }
+            catch (Exception ex) {
+            }
+            return;
+        }
         for (IRODSZone zone:zones)
         {
             if (zone.path == str)

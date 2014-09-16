@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.lang.ObjectUtils;
+//import org.apache.commons.lang.ObjectUtils;
 import org.irods.jargon.core.connection.*;
 import org.irods.jargon.core.exception.DataNotFoundException;
 import org.irods.jargon.core.exception.JargonException;
@@ -41,7 +41,7 @@ public class FileService {
     public FileService()
     {
 
-        irodsAccount = new IRODSAccount("192.168.6.131",1247,"rods","rods","","tempZone","demoResc");
+        irodsAccount = new IRODSAccount("192.168.6.134",1247,"rods","rods","","tempZone","demoResc");
 
         try {
             irodsFileSystem = new IRODSFileSystem();
@@ -156,7 +156,7 @@ public class FileService {
     public List<File> sourceFiles = new ArrayList<File>();
 
     public void getFile() {
-        String targetIrodsFileAbsolutePath = "C:\\Users\\Bogdan\\Documents\\";
+        String targetIrodsFileAbsolutePath = System.getProperty("java.io.tmpdir");
         for (File transferFile : sourceFiles) {
             getFile(transferFile, targetIrodsFileAbsolutePath);
         }
@@ -166,7 +166,7 @@ public class FileService {
     TransferStatusCallbackListener listener = new TransferStatusCallbackListener() {
         @Override
         public FileStatusCallbackResponse statusCallback(TransferStatus transferStatus) throws JargonException {
-            return null;
+            return FileStatusCallbackResponse.SKIP;
         }
 
         @Override
@@ -176,7 +176,7 @@ public class FileService {
 
         @Override
         public CallbackResponse transferAsksWhetherToForceOperation(String s, boolean b) {
-            return null;
+            return CallbackResponse.YES_FOR_ALL;
         }
     };
 
