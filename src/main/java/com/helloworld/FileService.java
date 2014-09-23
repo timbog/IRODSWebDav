@@ -38,10 +38,13 @@ import javax.swing.JOptionPane;
  */
 public class FileService {
 
+    public static void setAccount (IRODSAccount acc) {
+        irodsAccount = acc;
+    }
     public FileService()
     {
 
-        irodsAccount = new IRODSAccount("192.168.6.135",1247,"rods","rods","","tempZone","demoResc");
+        //irodsAccount = new IRODSAccount("192.168.6.135",1247,"rods","rods","","tempZone","demoResc");
 
         try {
             irodsFileSystem = new IRODSFileSystem();
@@ -56,7 +59,7 @@ public class FileService {
 
     }
 
-    private IRODSAccount irodsAccount;
+    private static IRODSAccount irodsAccount;
 
     private IRODSFileSystem irodsFileSystem;
 
