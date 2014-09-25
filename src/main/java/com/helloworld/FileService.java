@@ -41,31 +41,40 @@ public class FileService {
     public static void setAccount (IRODSAccount acc) {
         irodsAccount = acc;
     }
+    public static void setDataTransferOps(DataTransferOperations opers) {
+        dataTransferOps = opers;
+    }
+    public static void setIRODSFileSystem(IRODSFileSystem sys) {
+        irodsFileSystem = sys;
+    }
     public FileService()
     {
-
-        //irodsAccount = new IRODSAccount("192.168.6.135",1247,"rods","rods","","tempZone","demoResc");
-
-        try {
-            irodsFileSystem = new IRODSFileSystem();
-        }
-        catch (JargonException ex) {
-        }
-        try {
-            this.dataTransferOps = irodsFileSystem.getIRODSAccessObjectFactory().getDataTransferOperations(irodsAccount);
-        }
-        catch (JargonException ex) {
-        }
-
     }
 
     private static IRODSAccount irodsAccount;
 
-    private IRODSFileSystem irodsFileSystem;
+    private static IRODSFileSystem irodsFileSystem;
 
     private TransferControlBlock transferControlBlock;
 
-    private DataTransferOperations dataTransferOps = null;
+    private static DataTransferOperations dataTransferOps;
+
+    TransferStatusCallbackListener listener = new TransferStatusCallbackListener() {
+        @Override
+        public FileStatusCallbackResponse statusCallback(TransferStatus transferStatus) throws JargonException {
+            return FileStatusCallbackResponse.SKIP;
+        }
+
+        @Override
+        public void overallStatusCallback(TransferStatus transferStatus) throws JargonException {
+
+        }
+
+        @Override
+        public CallbackResponse transferAsksWhetherToForceOperation(String s, boolean b) {
+            return CallbackResponse.YES_FOR_ALL;
+        }
+    };
 
     public IRODSFile getIRODSFileForPath(String irodsFilePath) throws Exception {
         if (irodsFilePath == null || irodsFilePath.isEmpty()) {
@@ -102,12 +111,13 @@ public class FileService {
             //idropGui.showIdropException(ex);
         }
         try {
-            //System.out.print(sourceResource);
+            String s =  path + '/' + uploadData.getFile().getName();
+            String s2 = uploadData.getFile().getName();
             dataTransferOps.putOperation(localSourceAbsolutePath,
-                    path + '/' + uploadData.getFile().getName(), sourceResource, new TransferStatusCallbackListener() {
+                    path + "/" + uploadData.getFile().getName(), sourceResource, new TransferStatusCallbackListener() {
                         @Override
                         public FileStatusCallbackResponse statusCallback(TransferStatus transferStatus) throws JargonException {
-                            return FileStatusCallbackResponse.SKIP;
+                            return null;
                         }
 
                         @Override
@@ -117,11 +127,12 @@ public class FileService {
 
                         @Override
                         public CallbackResponse transferAsksWhetherToForceOperation(String s, boolean b) {
-                            return CallbackResponse.YES_FOR_ALL;
+                            return null;
                         }
-                    }, transferControlBlock);
+                    }
+                    , transferControlBlock);
 
-        } catch (JargonException ex) {
+        } catch (Exception ex) {
             //java.util.logging.Logger.getLogger(LocalFileTree.class.getName()).log(
             // java.util.logging.Level.SEVERE, null, ex);
             //idropGui.showIdropException(ex);
@@ -166,22 +177,7 @@ public class FileService {
 
     }
 
-    TransferStatusCallbackListener listener = new TransferStatusCallbackListener() {
-        @Override
-        public FileStatusCallbackResponse statusCallback(TransferStatus transferStatus) throws JargonException {
-            return FileStatusCallbackResponse.SKIP;
-        }
 
-        @Override
-        public void overallStatusCallback(TransferStatus transferStatus) throws JargonException {
-
-        }
-
-        @Override
-        public CallbackResponse transferAsksWhetherToForceOperation(String s, boolean b) {
-            return CallbackResponse.YES_FOR_ALL;
-        }
-    };
 
     void getFile(File transferFile, String targetIrodsFileAbsolutePath) {
         // need to create new Transfer Control Block for each transfer since it needs to be reset

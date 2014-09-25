@@ -49,6 +49,8 @@ public class IRODSAuthHandler implements AuthenticationHandler {
             IRODSFileSystem irodsFileSystem = new IRODSFileSystem();
             DataTransferOperations dataTransferOps = irodsFileSystem.getIRODSAccessObjectFactory().getDataTransferOperations(irodsAccount);
             FileService.setAccount(irodsAccount);
+            FileService.setDataTransferOps(dataTransferOps);
+            FileService.setIRODSFileSystem(irodsFileSystem);
             return "ok";
         }
         catch (Exception ex) {
