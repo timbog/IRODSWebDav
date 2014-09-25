@@ -21,6 +21,7 @@ package com.helloworld;
 import io.milton.annotations.*;
 
 import java.io.*;
+import java.sql.Time;
 import java.text.ParseException;
 import java.util.*;
 
@@ -28,6 +29,7 @@ import org.apache.commons.io.FileUtils;
 import org.irods.jargon.core.pub.io.IRODSFile;
 import org.irods.jargon.core.query.CollectionAndDataObjectListingEntry;
 import java.text.SimpleDateFormat;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.swing.JOptionPane;
 
 @ResourceController
@@ -38,20 +40,14 @@ public class HelloWorldController  {
 
     private List<IRODSZone> IRODSZones = new ArrayList<IRODSZone>();
 
+    //private ConcurrentHashMap hm;
+
     public HelloWorldController(){
         IRODSZone pro = new IRODSZone("tempZone");
         pro.path = "/tempZone/home/rods";
+        //hm = new ConcurrentHashMap(10);
         try {
-
-            //File fl = new File("C:\\Users\\Bogdan\\Documents\\newTest.txt");
-            //fl.createNewFile();
-            //UploadDataObj success = new UploadDataObj(fl);
-            //service.putFile(success);
-            //ProductFile file = new ProductFile(f.getName(),(File) f);
-            //pro.productFiles.add(file);
             IRODSZones.add(pro);
-            //IRODSZones.add(pro2);
-
         } catch (Exception e) {
             System.out.print("Some shit2");
         }
@@ -72,18 +68,18 @@ public class HelloWorldController  {
     @ChildrenOf
     public List<Object> getProductFiles(IRODSZone IRODSZone) {
         List<Object> productFiles = null;
-        String targetIrodsFileAbsolutePath = "C:\\Users\\Bogdan\\Documents\\";
+        String targetIrodsFileAbsolutePath = System.getProperty("java.io.tmpdir");
+        Date now = new Date();
+        if (IRODSZone.getDownloadedTime() == null)
+            IRODSZone.setDownloadedTime(now);
+        if ((((IRODSZone.getDownloadedTime().getTime() - now.getTime()) / (60 * 1000) % 60) < 10) &&
+        (IRODSZone.getProductFiles().size() != 0))
+            return IRODSZone.getProductFiles();
         try {
-            //if (IRODSZone.getName() == "tempZone")
             List<CollectionAndDataObjectListingEntry> files = service.getFilesAndCollectionsUnderParentCollection(IRODSZone.path);
-            //if (IRODSZone.getName() != "tempZone")
-            //    files = service.getFilesAndCollectionsUnderParentCollection("/tempZone/home/rods/" + IRODSZone.getName());
             productFiles = new ArrayList<Object>(files.size());
             for (CollectionAndDataObjectListingEntry entry: files) {
-                //JOptionPane.showMessageDialog(null, "no");
                 IRODSFile f = service.getIRODSFileForPath(entry.getFormattedAbsolutePath());
-                //service.sourceFiles.add((File) f);
-                //service.getFile((File) f, "C:\\Users\\Bogdan\\Documents\\");
                 if (f.isDirectory()) {
                     IRODSZone tmp = new IRODSZone(f.getName());
                     tmp.modified = f.lastModified();
@@ -92,7 +88,6 @@ public class HelloWorldController  {
                 }
                 else
                     productFiles.add(new ProductFile(f.getName(), (File) f));
-                //break;
             }
 
         } catch (Exception e) {
@@ -305,6 +300,8 @@ public class HelloWorldController  {
     public class IRODSZone {
         private String name;
 
+        private Date downloadedTime;
+
         private long modified;
 
         public List<Object> productFiles = new ArrayList<Object>();
@@ -322,6 +319,14 @@ public class HelloWorldController  {
 
         public List<Object> getProductFiles() {
             return productFiles;
+        }
+
+        public Date getDownloadedTime() {
+           return downloadedTime;
+        }
+
+        public void setDownloadedTime(Date time) {
+            this.downloadedTime = time;
         }
     }
 
@@ -342,4 +347,37 @@ public class HelloWorldController  {
             return file;
         }
     }
+
+    /*public List<Object> getChildren (IRODSZone zn) {
+        List<Object> productFiles = null;
+        String targetIrodsFileAbsolutePath = System.getProperty("java.io.tmpdir");
+        try {
+            //if (IRODSZone.getName() == "tempZone")
+            List<CollectionAndDataObjectListingEntry> files = service.getFilesAndCollectionsUnderParentCollection(IRODSZone.path);
+            //if (IRODSZone.getName() != "tempZone")
+            //    files = service.getFilesAndCollectionsUnderParentCollection("/tempZone/home/rods/" + IRODSZone.getName());
+            productFiles = new ArrayList<Object>(files.size());
+            for (CollectionAndDataObjectListingEntry entry: files) {
+                //JOptionPane.showMessageDialog(null, "no");
+                IRODSFile f = service.getIRODSFileForPath(entry.getFormattedAbsolutePath());
+                //service.sourceFiles.add((File) f);
+                //service.getFile((File) f, "C:\\Users\\Bogdan\\Documents\\");
+                if (f.isDirectory()) {
+                    IRODSZone tmp = new IRODSZone(f.getName());
+                    tmp.modified = f.lastModified();
+                    tmp.path = zn.path + "/" + tmp.getName();
+                    productFiles.add(tmp);
+                }
+                else
+                    productFiles.add(new ProductFile(f.getName(), (File) f));
+                //break;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        zn.productFiles = productFiles;
+        return productFiles;
+    }*/
+
 }

@@ -85,7 +85,7 @@ public class FileService {
     public void putFile(UploadDataObj uploadData, String path) {
         // this is just a regular local file or folder
         //String localSourceAbsolutePath = transferFile.getAbsolutePath();
-        //JOptionPane.showMessageDialog(null, "hui");
+
         String localSourceAbsolutePath = uploadData.getFile().getAbsolutePath();
 
         String sourceResource = irodsAccount.getDefaultStorageResource();
@@ -107,7 +107,7 @@ public class FileService {
                     path + '/' + uploadData.getFile().getName(), sourceResource, new TransferStatusCallbackListener() {
                         @Override
                         public FileStatusCallbackResponse statusCallback(TransferStatus transferStatus) throws JargonException {
-                            return null;
+                            return FileStatusCallbackResponse.SKIP;
                         }
 
                         @Override
@@ -117,7 +117,7 @@ public class FileService {
 
                         @Override
                         public CallbackResponse transferAsksWhetherToForceOperation(String s, boolean b) {
-                            return null;
+                            return CallbackResponse.YES_FOR_ALL;
                         }
                     }, transferControlBlock);
 
