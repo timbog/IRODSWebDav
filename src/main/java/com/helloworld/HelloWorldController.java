@@ -97,7 +97,10 @@ public class HelloWorldController  {
     public InputStream getFile(ProductFile file) throws IOException {
         String targetIrodsFileAbsolutePath = System.getProperty("java.io.tmpdir");
         try {
-            service.getFile((File) file.getFile(), targetIrodsFileAbsolutePath);
+            GetTransferRunner runner = new GetTransferRunner(service, (File) file.getFile(), targetIrodsFileAbsolutePath);
+            Thread getThread = new Thread(runner);
+            getThread.start();
+            //service.getFile((File) file.getFile(), targetIrodsFileAbsolutePath);
         }
         catch (Throwable t) {
             t.printStackTrace();
