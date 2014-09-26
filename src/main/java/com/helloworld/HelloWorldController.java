@@ -65,12 +65,12 @@ public class HelloWorldController  {
     public List<Object> getProductFiles(Folder folder) {
         List<Object> productFiles = null;
         String targetIrodsFileAbsolutePath = System.getProperty("java.io.tmpdir");
-        //Date now = new Date();
-        /*if (IRODSZone.getDownloadedTime() == null)
-            IRODSZone.setDownloadedTime(now);
-        if ((((IRODSZone.getDownloadedTime().getTime() - now.getTime()) / (60 * 1000) % 60) < 10) &&
-        (IRODSZone.getProductFiles().size() != 0))
-            return IRODSZone.getProductFiles();*/
+        Date now = new Date();
+        if (folder.getDownloadedTime() == null)
+            folder.setDownloadedTime(now);
+        if ((((folder.getDownloadedTime().getTime() - now.getTime()) / (60 * 1000) % 60) < 10) &&
+        (folder.getProductFiles().size() != 0))
+            return folder.getProductFiles();
         try {
             List<CollectionAndDataObjectListingEntry> files = service.getFilesAndCollectionsUnderParentCollection(folder.getPath());
             productFiles = new ArrayList<Object>(files.size());

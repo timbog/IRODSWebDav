@@ -12,12 +12,11 @@ public class Folder {
     private String name;
     private Date downloadedTime;
     private long modified;
-    private List<Object> productFiles;
+    private List<Object> productFiles = new ArrayList<Object>();
     private String path;
 
     public Folder(String name) {
         this.name = name;
-        this.productFiles = new ArrayList<Object>();
     }
 
     public String getName() {
