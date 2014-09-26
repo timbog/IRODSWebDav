@@ -20,7 +20,7 @@ import org.irods.jargon.core.pub.IRODSFileSystem;
  */
 public class IRODSAuthHandler implements AuthenticationHandler {
 
-//private static final Logger log = LoggerFactory.getLogger( BasicAuthHandler.class );
+    private boolean first = true;
 
     @Override
     public boolean credentialsPresent(Request request) {
@@ -48,12 +48,17 @@ public class IRODSAuthHandler implements AuthenticationHandler {
             IRODSAccount irodsAccount = new IRODSAccount("192.168.6.135", 1247, auth.getUser(), auth.getPassword(), "", "tempZone", "demoResc");
             IRODSFileSystem irodsFileSystem = new IRODSFileSystem();
             DataTransferOperations dataTransferOps = irodsFileSystem.getIRODSAccessObjectFactory().getDataTransferOperations(irodsAccount);
-            FileService.setAccount(irodsAccount);
-            FileService.setDataTransferOps(dataTransferOps);
-            FileService.setIRODSFileSystem(irodsFileSystem);
+            FileService fs = FileService.getInstance();
+            fs.setAccount(irodsAccount);
+            fs.setDataTransferOps(dataTransferOps);
+            fs.setIRODSFileSystem(irodsFileSystem);
+            if (first)
+                fs.setInitialFolders(irodsAccount.getZone());
+            first = false;
             return "ok";
         }
         catch (Exception ex) {
+            System.out.print("Exception");
         }
         return resource.authenticate("1","1");
     }

@@ -21,7 +21,6 @@ package com.helloworld;
 import io.milton.annotations.*;
 
 import java.io.*;
-import java.sql.Time;
 import java.text.ParseException;
 import java.util.*;
 
@@ -29,27 +28,26 @@ import org.apache.commons.io.FileUtils;
 import org.irods.jargon.core.pub.io.IRODSFile;
 import org.irods.jargon.core.query.CollectionAndDataObjectListingEntry;
 import java.text.SimpleDateFormat;
-import java.util.concurrent.ConcurrentHashMap;
-import javax.swing.JOptionPane;
 
 @ResourceController
 public class HelloWorldController  {
-    private com.helloworld.FileService service = new FileService();
 
-    private static org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger(HelloWorldController.class);
+    private FileService service = FileService.getInstance();
+    private List<Folder> folders = new ArrayList<Folder>();
+    private HashSet<String> files = new HashSet<String>();
 
-    private List<IRODSZone> IRODSZones = new ArrayList<IRODSZone>();
+    public HelloWorldController() {
+        service.setController(this);
+    }
 
-    //private ConcurrentHashMap hm;
-
-    public HelloWorldController(){
-        IRODSZone pro = new IRODSZone("tempZone");
-        pro.path = "/tempZone/home/rods";
-        //hm = new ConcurrentHashMap(10);
+    public void setInitialFolders(String zoneDirName)
+    {
+        Folder zoneDir = new Folder(zoneDirName);
+        zoneDir.setPath("/" + zoneDirName);
         try {
-            IRODSZones.add(pro);
+            folders.add(zoneDir);
         } catch (Exception e) {
-            System.out.print("Some shit2");
+            System.out.print("");
         }
     }
 
@@ -59,31 +57,29 @@ public class HelloWorldController  {
     }
 
     @ChildrenOf
-    public List<IRODSZone> getProducts(HelloWorldController root) {
-        return IRODSZones;
+    public List<Folder> getProducts(HelloWorldController root) {
+        return folders;
     }
 
-    // how to get subfolders????
-
     @ChildrenOf
-    public List<Object> getProductFiles(IRODSZone IRODSZone) {
+    public List<Object> getProductFiles(Folder folder) {
         List<Object> productFiles = null;
         String targetIrodsFileAbsolutePath = System.getProperty("java.io.tmpdir");
-        Date now = new Date();
-        if (IRODSZone.getDownloadedTime() == null)
+        //Date now = new Date();
+        /*if (IRODSZone.getDownloadedTime() == null)
             IRODSZone.setDownloadedTime(now);
         if ((((IRODSZone.getDownloadedTime().getTime() - now.getTime()) / (60 * 1000) % 60) < 10) &&
         (IRODSZone.getProductFiles().size() != 0))
-            return IRODSZone.getProductFiles();
+            return IRODSZone.getProductFiles();*/
         try {
-            List<CollectionAndDataObjectListingEntry> files = service.getFilesAndCollectionsUnderParentCollection(IRODSZone.path);
+            List<CollectionAndDataObjectListingEntry> files = service.getFilesAndCollectionsUnderParentCollection(folder.getPath());
             productFiles = new ArrayList<Object>(files.size());
             for (CollectionAndDataObjectListingEntry entry: files) {
                 IRODSFile f = service.getIRODSFileForPath(entry.getFormattedAbsolutePath());
                 if (f.isDirectory()) {
-                    IRODSZone tmp = new IRODSZone(f.getName());
-                    tmp.modified = f.lastModified();
-                    tmp.path = IRODSZone.path + "/" + tmp.getName();
+                    Folder tmp = new Folder(f.getName());
+                    tmp.setModified(f.lastModified());
+                    tmp.setPath(folder.getPath() + "/" + tmp.getName());
                     productFiles.add(tmp);
                 }
                 else
@@ -93,7 +89,7 @@ public class HelloWorldController  {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        IRODSZone.productFiles = productFiles;
+        folder.setProductFiles(productFiles);
         return productFiles;
     }
 
@@ -101,7 +97,7 @@ public class HelloWorldController  {
     public InputStream getFile(ProductFile file) throws IOException {
         String targetIrodsFileAbsolutePath = System.getProperty("java.io.tmpdir");
         try {
-            service.getFile((File) file.file, targetIrodsFileAbsolutePath);
+            service.getFile((File) file.getFile(), targetIrodsFileAbsolutePath);
         }
         catch (Throwable t) {
             t.printStackTrace();
@@ -110,10 +106,8 @@ public class HelloWorldController  {
         return FileUtils.openInputStream(new File(targetIrodsFileAbsolutePath + file.getName()));
     }
 
-    private HashSet<String> files = new HashSet<String>();
-
     @PutChild
-    public ProductFile upload(IRODSZone product, String newName, byte[] bytes){
+    public ProductFile upload(Folder product, String newName, byte[] bytes){
         File file = new File(System.getProperty("java.io.tmpdir") + newName);
         ProductFile pf = new ProductFile(newName, file);
         if (bytes == null || bytes.length == 0 || files.contains(newName)) {
@@ -135,35 +129,18 @@ public class HelloWorldController  {
         catch (Exception e) {
         }
 
-        service.putFile(new UploadDataObj(file), product.path);
+        service.putFile(new UploadDataObj(file), product.getPath());
         product.getProductFiles().add(pf);
         return pf;
     }
 
-
-    @PutChild
-    public ProductFile upload(ProductFile pf, byte[] bytes) {
-        byte[] test = bytes;
-        try {
-            FileOutputStream fos = new FileOutputStream(pf.getFile().getAbsolutePath());
-            fos.write(bytes);
-            fos.close();
-        }
-        catch (Exception e) {
-        }
-        UploadDataObj obj = new UploadDataObj(pf.getFile());
-        //service.putFile(obj);
-        return pf;
-    }
-
-
     @MakeCollection
-    public IRODSZone createFolder(IRODSZone zone, String newName) {
-        IRODSZone newZone = new IRODSZone(newName);
-        newZone.path = zone.path + "/" + newName;
-        zone.productFiles.add(newZone);
+    public Folder createFolder(Folder zone, String newName) {
+        Folder newZone = new Folder(newName);
+        newZone.setPath(zone.getPath() + "/" + newName);
+        zone.getProductFiles().add(newZone);
         try {
-            service.createNewFolder(newZone.path);
+            service.createNewFolder(newZone.getPath());
         }
         catch (Exception ex) {
         }
@@ -184,10 +161,11 @@ public class HelloWorldController  {
 
         }
     }
+
     @Delete
-    public void pretendToDeleteImagesFolder(IRODSZone zone) {
+    public void pretendToDeleteImagesFolder(Folder zone) {
         try {
-            service.deleteFileOrFolderNoForce(zone.path);
+            service.deleteFileOrFolderNoForce(zone.getPath());
         }
         catch (Exception ex){
 
@@ -195,9 +173,9 @@ public class HelloWorldController  {
     }
 
     @Move
-    public void move(ProductFile pf, IRODSZone newZone, String newName) {
+    public void move(ProductFile pf, Folder newZone, String newName) {
         String str = pf.getFile().getParent();
-        if (str.equals(newZone.path)) {
+        if (str.equals(newZone.getPath())) {
             try {
                 service.renameIRODSFileOrDirectory(str +  '/' + pf.getName(), newName);
             }
@@ -205,26 +183,18 @@ public class HelloWorldController  {
             }
             return;
         }
-        for (IRODSZone zone:zones)
-        {
-            if (zone.path == str)
-            {
-                zone.productFiles.remove(pf);
-                break;
-            }
-        }
-        newZone.productFiles.add(pf);
+        newZone.getProductFiles().add(pf);
         try {
-            service.moveIRODSFileUnderneathNewParent(pf.getFile().getAbsolutePath(), newZone.path + "/" + newName);
+            service.moveIRODSFileUnderneathNewParent(pf.getFile().getAbsolutePath(), newZone.getPath() + "/" + newName);
         }
         catch (Exception ex) {
         }
     }
 
     @Move
-    public void move(IRODSZone zn, IRODSZone newZone, String newName) {
+    public void move(Folder zn, Folder newZone, String newName) {
 
-        String str = zn.path;
+        String str = zn.getPath();
         int temp = 0;
         for (int i = 0; i < str.length(); i++) {
             if (str.charAt(str.length() - 1 - i) == '/') {
@@ -233,24 +203,23 @@ public class HelloWorldController  {
             }
         }
         String parentPath = str.substring(0, temp);
-        //boolean a = (parentPath == newZone.path);
-        if (parentPath.equals(newZone.path)) {
+        if (parentPath.equals(newZone.getPath())) {
             try {
-                service.renameIRODSFileOrDirectory(zn.path, newName);
+                service.renameIRODSFileOrDirectory(zn.getPath(), newName);
             }
             catch (Exception ex) {
             }
             return;
         }
         try {
-            //service.moveIRODSFileUnderneathNewParent(zn.path, newZone.path + "/" + newName);
-            service.createNewFolder(newZone.path + "/" + newName);
-            moveFiles(zn, newZone.path + "/" + newName);
-            service.deleteFileOrFolderNoForce(zn.path);
+            service.createNewFolder(newZone.getPath() + "/" + newName);
+            moveFiles(zn, newZone.getPath() + "/" + newName);
+            service.deleteFileOrFolderNoForce(zn.getPath());
         }
         catch (Exception ex) {
         }
     }
+
     @ModifiedDate
     public Date getModifiedDate(ProductFile pf) {
        SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
@@ -261,21 +230,21 @@ public class HelloWorldController  {
         }
         return null;
     }
+
     @ModifiedDate
-    public Date getModifiedDate(IRODSZone zn) {
+    public Date getModifiedDate(Folder zn) {
         SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
         try {
-            return sdf.parse(sdf.format(zn.modified));
+            return sdf.parse(sdf.format(zn.getModified()));
         }
         catch (ParseException ex) {
         }
         return null;
     }
 
-    private void moveFiles(IRODSZone oldZone, String newZonePath) throws Exception
+    private void moveFiles(Folder oldZone, String newZonePath) throws Exception
     {
         List<Object> list = this.getProductFiles(oldZone);
-
         for (Object entry:list) {
             String str = entry.getClass().getName();
             if (entry.getClass().getName() == "com.helloworld.HelloWorldController$ProductFile") {
@@ -283,8 +252,8 @@ public class HelloWorldController  {
                 this.getFile(pf);
                 service.putFile(new UploadDataObj(new File(System.getProperty("java.io.tmpdir") + pf.getFile().getName())), newZonePath);
             }
-            if (entry.getClass().getName() == "com.helloworld.HelloWorldController$IRODSZone") {
-                IRODSZone zn = (IRODSZone) entry;
+            if (entry.getClass().getName() == "com.helloworld.HelloWorldController$Folder") {
+                Folder zn = (Folder) entry;
                 try {
                     service.createNewFolder(newZonePath + "/" + zn.getName());
                 }
@@ -295,58 +264,6 @@ public class HelloWorldController  {
         }
     }
 
-    private static List<IRODSZone> zones = new ArrayList<IRODSZone>();
-
-    public class IRODSZone {
-        private String name;
-
-        private Date downloadedTime;
-
-        private long modified;
-
-        public List<Object> productFiles = new ArrayList<Object>();
-
-        public IRODSZone(String name) {
-            this.name = name;
-            HelloWorldController.zones.add(this);
-        }
-
-        public String path;
-
-        public String getName() {
-            return name;
-        }
-
-        public List<Object> getProductFiles() {
-            return productFiles;
-        }
-
-        public Date getDownloadedTime() {
-           return downloadedTime;
-        }
-
-        public void setDownloadedTime(Date time) {
-            this.downloadedTime = time;
-        }
-    }
-
-    public class ProductFile {
-        private String name;
-        private File file;
-
-        public ProductFile(String name, File file) {
-            this.name = name;
-            this.file = file;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public File getFile() {
-            return file;
-        }
-    }
 
     /*public List<Object> getChildren (IRODSZone zn) {
         List<Object> productFiles = null;
