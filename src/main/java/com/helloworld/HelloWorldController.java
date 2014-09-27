@@ -28,6 +28,7 @@ import org.apache.commons.io.FileUtils;
 import org.irods.jargon.core.pub.io.IRODSFile;
 import org.irods.jargon.core.query.CollectionAndDataObjectListingEntry;
 import java.text.SimpleDateFormat;
+import java.lang.Object;
 
 @ResourceController
 public class HelloWorldController  {
@@ -85,7 +86,6 @@ public class HelloWorldController  {
                 else
                     productFiles.add(new ProductFile(f.getName(), (File) f));
             }
-
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -96,6 +96,17 @@ public class HelloWorldController  {
     @Get
     public InputStream getFile(ProductFile file) throws IOException {
         String targetIrodsFileAbsolutePath = System.getProperty("java.io.tmpdir");
+        ArrayList<String> ls = this.getFolderNames(file.getFile().getPath());
+        for (int i = 0; i < ls.size(); i++) {
+            if (i == 0) {
+                boolean bool = new File(targetIrodsFileAbsolutePath + ls.get(i)).mkdirs();
+                targetIrodsFileAbsolutePath = targetIrodsFileAbsolutePath + ls.get(i);
+            }
+            else {
+                boolean bool = new File(targetIrodsFileAbsolutePath + "\\" + ls.get(i)).mkdirs();
+                targetIrodsFileAbsolutePath = targetIrodsFileAbsolutePath + "\\" + ls.get(i);
+            }
+        }
         try {
             GetTransferRunner runner = new GetTransferRunner(service, (File) file.getFile(), targetIrodsFileAbsolutePath);
             Thread getThread = new Thread(runner);
@@ -106,12 +117,25 @@ public class HelloWorldController  {
             t.printStackTrace();
             System.out.println(t);
         }
-        return FileUtils.openInputStream(new File(targetIrodsFileAbsolutePath + file.getName()));
+        return FileUtils.openInputStream(new File(targetIrodsFileAbsolutePath + "\\" + file.getName()));
     }
 
     @PutChild
     public ProductFile upload(Folder product, String newName, byte[] bytes){
-        File file = new File(System.getProperty("java.io.tmpdir") + newName);
+        String targetIrodsFileAbsolutePath = System.getProperty("java.io.tmpdir");
+        ArrayList<String> ls = this.getFolderNames(product.getPath());
+        for (int i = 0; i < ls.size(); i++) {
+            if (i == 0) {
+                boolean bool = new File(targetIrodsFileAbsolutePath + ls.get(i)).mkdirs();
+                targetIrodsFileAbsolutePath = targetIrodsFileAbsolutePath + ls.get(i);
+            }
+            else {
+                boolean bool = new File(targetIrodsFileAbsolutePath + "\\" + ls.get(i)).mkdirs();
+                targetIrodsFileAbsolutePath = targetIrodsFileAbsolutePath + "\\" + ls.get(i);
+            }
+        }
+        File file = new File(targetIrodsFileAbsolutePath + "\\" + newName);
+
         ProductFile pf = new ProductFile(newName, file);
         if (bytes == null || bytes.length == 0 || files.contains(newName)) {
             return pf;
@@ -131,8 +155,10 @@ public class HelloWorldController  {
         }
         catch (Exception e) {
         }
-
-        service.putFile(new UploadDataObj(file), product.getPath());
+        PutTransferRunner runner = new PutTransferRunner(service, file, product.getPath());
+        Thread putThread = new Thread(runner);
+        putThread.start();
+        //service.putFile(new UploadDataObj(file), product.getPath());
         product.getProductFiles().add(pf);
         return pf;
     }
@@ -245,8 +271,7 @@ public class HelloWorldController  {
         return null;
     }
 
-    private void moveFiles(Folder oldZone, String newZonePath) throws Exception
-    {
+    private void moveFiles(Folder oldZone, String newZonePath) throws Exception {
         List<Object> list = this.getProductFiles(oldZone);
         for (Object entry:list) {
             String str = entry.getClass().getName();
@@ -265,6 +290,21 @@ public class HelloWorldController  {
                 moveFiles(zn, newZonePath + "/" + zn.getName());
             }
         }
+    }
+
+    private ArrayList<String> getFolderNames(String path) {
+        ArrayList<String> list = new ArrayList<String>();
+        String temp = "";
+        for (int i = 0; i < path.length(); i++) {
+            if (path.charAt(i) != '/')
+                temp = temp + path.charAt(i);
+            else {
+                if (temp.length() != 0)
+                    list.add(temp);
+                temp = "";
+            }
+        }
+        return list;
     }
 
 
