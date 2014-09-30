@@ -3,36 +3,18 @@ package com.helloworld;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 //import org.apache.commons.lang.ObjectUtils;
 import org.irods.jargon.core.connection.*;
-import org.irods.jargon.core.exception.DataNotFoundException;
 import org.irods.jargon.core.exception.JargonException;
-import org.irods.jargon.core.exception.JargonFileOrCollAlreadyExistsException;
-import org.irods.jargon.core.exception.OverwriteException;
-import org.irods.jargon.core.packinstr.Tag;
-import org.irods.jargon.core.packinstr.TransferOptions;
 import org.irods.jargon.core.pub.*;
-import org.irods.jargon.core.pub.domain.Collection;
-import org.irods.jargon.core.pub.domain.Resource;
 import org.irods.jargon.core.pub.io.IRODSFile;
 import org.irods.jargon.core.pub.io.IRODSFileFactory;
-import org.irods.jargon.core.query.AVUQueryElement;
-import org.irods.jargon.core.query.AVUQueryOperatorEnum;
 import org.irods.jargon.core.query.CollectionAndDataObjectListingEntry;
-import org.irods.jargon.core.query.JargonQueryException;
-import org.irods.jargon.core.query.MetaDataAndDomainData;
-import org.irods.jargon.core.query.RodsGenQueryEnum;
-import org.irods.jargon.core.rule.IRODSRuleExecResult;
 import org.irods.jargon.core.transfer.TransferControlBlock;
 import org.irods.jargon.core.transfer.TransferStatus;
 import org.irods.jargon.core.transfer.TransferStatusCallbackListener;
-import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import javax.swing.JOptionPane;
 /**
  * Created by Bogdan on 28.07.2014.
  */

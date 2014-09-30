@@ -8,6 +8,7 @@ import java.io.File;
 public class ProductFile {
     private String name;
     private File file;
+    private String IRODSPath = "";
 
     public ProductFile(String name, File file) {
         this.name = name;
@@ -20,5 +21,13 @@ public class ProductFile {
 
     public File getFile() {
         return file;
+    }
+
+    public void setIRODSPath(String path) {
+        this.IRODSPath = path;
+    }
+
+    public String getIRODSPath() {
+        return IRODSPath;
     }
 }

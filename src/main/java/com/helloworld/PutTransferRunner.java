@@ -8,15 +8,17 @@ import java.io.File;
 public class PutTransferRunner implements Runnable{
     private FileService fs;
     private File file;
-    private String path;
-    public PutTransferRunner(FileService fls, File file, String path)
+    private Folder parentFold;
+
+    public PutTransferRunner(FileService fls, File file, Folder fold)
     {
         this.fs = fls;
         this.file = file;
-        this.path = path;
+        this.parentFold = fold;
     }
-    public void run()		//Этот метод будет выполняться в побочном потоке
+    public void run()
     {
-        fs.putFile(new UploadDataObj(file), path);
+        fs.putFile(new UploadDataObj(file), parentFold.getPath());
+        parentFold.setTimeToUpdate();
     }
 }

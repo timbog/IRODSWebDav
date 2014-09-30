@@ -1,6 +1,7 @@
 package com.helloworld;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -53,5 +54,13 @@ public class Folder {
 
     public void setModified(long modified) {
         this.modified = modified;
+    }
+
+    public void setTimeToUpdate() {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(this.getDownloadedTime());
+        cal.add(Calendar.MINUTE, -11);
+        Date elevenMinutesBack = cal.getTime();
+        this.setDownloadedTime(elevenMinutesBack);
     }
 }

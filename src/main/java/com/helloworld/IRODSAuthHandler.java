@@ -34,15 +34,12 @@ public class IRODSAuthHandler implements AuthenticationHandler {
 
             return false;
         }
-
         boolean b = auth.getScheme().equals( Scheme.BASIC );
-
         return b;
     }
 
     @Override
     public Object authenticate( Resource resource, Request request ) {
-
         Auth auth = request.getAuthorization();
         try {
             IRODSAccount irodsAccount = new IRODSAccount("192.168.6.135", 1247, auth.getUser(), auth.getPassword(), "", "tempZone", "demoResc");
