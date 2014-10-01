@@ -52,6 +52,9 @@ public class HelloWorldController {
         } catch (Exception e) {
             System.out.print("");
         }
+        //GetChildrenRunner runner = new GetChildrenRunner(service, zoneDir);
+        //Thread getChildrenThread = new Thread(runner);
+        //getChildrenThread.start();
     }
 
     @Root
@@ -237,7 +240,8 @@ public class HelloWorldController {
             }
             return;
         }
-        //parentZone.getProductFiles().remove(zn);
+        List<Object> l = parentZone.getProductFiles();
+        parentZone.getProductFiles().remove(zn);
         try {
             service.createNewFolder(newZone.getPath() + "/" + newName);
             moveFiles(zn, newZone.getPath() + "/" + newName);
@@ -246,8 +250,7 @@ public class HelloWorldController {
         catch (Exception ex) {
             System.out.print("fdfdf");
         }
-
-        parentZone.setTimeToUpdate();
+        //parentZone.setTimeToUpdate();
         newZone.setTimeToUpdate();
     }
 
@@ -335,7 +338,7 @@ public class HelloWorldController {
             boolean x = (path.substring(i,i + 1).equals( "\\"));
             if ((path.charAt(i) != '/') && (!path.substring(i,i + 1).equals( "\\")))
                 temp = temp + path.charAt(i);
-            else if ((!temp.equals(zoneDir.getName()) && (!temp.equals("")))) {
+            else if (((!temp.equals(zoneDir.getName()) && (!temp.equals("")))) || (i == path.length() - 1)) {
                 for (int j = 0; j < folder.getProductFiles().size(); j++) {
                     if (folder.getProductFiles().get(j).getClass().getName().equals("com.helloworld.Folder")) {
                         Folder tempFold = (Folder) folder.getProductFiles().get(j);
