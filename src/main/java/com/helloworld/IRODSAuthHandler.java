@@ -22,8 +22,6 @@ public class IRODSAuthHandler implements AuthenticationHandler {
 
     private boolean first = true;
 
-    private String authResult ="";
-
     @Override
     public boolean credentialsPresent(Request request) {
         return request.getAuthorization() != null;
@@ -44,25 +42,22 @@ public class IRODSAuthHandler implements AuthenticationHandler {
     public Object authenticate( Resource resource, Request request ) {
         Auth auth = request.getAuthorization();
         try {
-            if (first) {
-                IRODSAccount irodsAccount = new IRODSAccount("192.168.6.135", 1247, auth.getUser(), auth.getPassword(), "", "tempZone", "demoResc");
-                IRODSFileSystem irodsFileSystem = new IRODSFileSystem();
-                DataTransferOperations dataTransferOps = irodsFileSystem.getIRODSAccessObjectFactory().getDataTransferOperations(irodsAccount);
-                FileService fs = FileService.getInstance();
-                fs.setAccount(irodsAccount);
-                fs.setDataTransferOps(dataTransferOps);
-                fs.setIRODSFileSystem(irodsFileSystem);
+            IRODSAccount irodsAccount = new IRODSAccount("192.168.6.135", 1247, auth.getUser(), auth.getPassword(), "", "tempZone", "demoResc");
+            IRODSFileSystem irodsFileSystem = new IRODSFileSystem();
+            DataTransferOperations dataTransferOps = irodsFileSystem.getIRODSAccessObjectFactory().getDataTransferOperations(irodsAccount);
+            FileService fs = FileService.getInstance();
+            fs.setAccount(irodsAccount);
+            fs.setDataTransferOps(dataTransferOps);
+            fs.setIRODSFileSystem(irodsFileSystem);
+            if (first)
                 fs.setInitialFolders(irodsAccount.getZone());
-                first = false;
-                authResult = "ok";
-            }
-            return authResult;
+            first = false;
+            return "ok";
         }
         catch (Exception ex) {
             System.out.print("Exception");
         }
-        authResult = "no";
-        return authResult;
+        return resource.authenticate("1","1");
     }
 
     @Override

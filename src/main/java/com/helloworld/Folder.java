@@ -9,7 +9,6 @@ import java.util.List;
  * Created by Bogdan on 26.09.2014.
  */
 public class Folder {
-
     private String name;
     private Date downloadedTime;
     private long modified;
@@ -22,6 +21,10 @@ public class Folder {
 
     public String getName() {
         return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public List<Object> getProductFiles() {
@@ -62,5 +65,9 @@ public class Folder {
         cal.add(Calendar.MINUTE, -11);
         Date elevenMinutesBack = cal.getTime();
         this.setDownloadedTime(elevenMinutesBack);
+    }
+
+    public boolean checkTime(Date time) {
+        return (((time.getTime() - this.getDownloadedTime().getTime()) / 1000 % 60) < 10);
     }
 }

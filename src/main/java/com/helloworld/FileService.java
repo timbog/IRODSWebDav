@@ -43,11 +43,12 @@ public class FileService {
         }
     };
 
-    private FileService() {}
+    private FileService() {
+    }
 
     private List<File> sourceFiles = new ArrayList<File>();
 
-    public void setAccount (IRODSAccount acc) {
+    public void setAccount(IRODSAccount acc) {
         irodsAccount = acc;
     }
 
@@ -63,15 +64,15 @@ public class FileService {
         controller = con;
     }
 
-    public IRODSAccount getAccount() {return irodsAccount;}
+    public IRODSAccount getAccount() {
+        return irodsAccount;
+    }
 
-    public void setInitialFolders(String zoneDirName)
-    {
+    public void setInitialFolders(String zoneDirName) {
         controller.setInitialFolders(zoneDirName);
     }
 
-    public static FileService getInstance()
-    {
+    public static FileService getInstance() {
         if (instance == null)
             instance = new FileService();
         return instance;
@@ -83,11 +84,9 @@ public class FileService {
         }
         try {
             return irodsFileSystem.getIRODSFileFactory(irodsAccount).instanceIRODSFile(irodsFilePath);
-        }
-        catch (JargonException ex) {
+        } catch (JargonException ex) {
             throw new Exception("aaa");
-        }
-        finally {
+        } finally {
             irodsFileSystem.close(irodsAccount);
         }
     }
@@ -101,7 +100,7 @@ public class FileService {
         } catch (JargonException ex) {
         }
         try {
-            String s =  path + '/' + uploadData.getFile().getName();
+            String s = path + '/' + uploadData.getFile().getName();
             String s2 = uploadData.getFile().getName();
             dataTransferOps.putOperation(localSourceAbsolutePath,
                     path + "/" + uploadData.getFile().getName(), sourceResource, new TransferStatusCallbackListener() {
@@ -150,35 +149,28 @@ public class FileService {
 
     }
 
-    public void getFile() {
+    /*public void getFile() {
         String targetIrodsFileAbsolutePath = System.getProperty("java.io.tmpdir");
         for (File transferFile : sourceFiles) {
             getFile(transferFile, targetIrodsFileAbsolutePath);
         }
-    }
+    }*/
 
-    public void getFile(File transferFile, String targetIrodsFileAbsolutePath) {
+    public void getFile(String filePath, String localPath) {
         try {
             this.transferControlBlock = irodsFileSystem.getIRODSAccessObjectFactory().buildDefaultTransferControlBlockBasedOnJargonProperties();
             transferControlBlock.getTransferOptions().setIntraFileStatusCallbacks(true);
         } catch (JargonException ex) {
         }
-        if (transferFile instanceof IRODSFile) {
-            try {
-                DataTransferOperations dto = irodsFileSystem.getIRODSAccessObjectFactory().getDataTransferOperations(
-                        irodsAccount);
-                String s = transferFile.getAbsolutePath();
-                String s1 = targetIrodsFileAbsolutePath;
-                dto.getOperation(transferFile.getAbsolutePath(), targetIrodsFileAbsolutePath, irodsAccount.getDefaultStorageResource(),
+        try {
+            DataTransferOperations dto = irodsFileSystem.getIRODSAccessObjectFactory().getDataTransferOperations(
+                    irodsAccount);
+            dto.getOperation(filePath, localPath, irodsAccount.getDefaultStorageResource(),
                     listener, this.transferControlBlock);
-            } catch (Throwable ex) {
-                int a = 56;
-            }
-            finally {
-                irodsFileSystem.closeAndEatExceptions();
-            }
-        } else {
-            transferFile.getAbsolutePath();
+        } catch (Throwable ex) {
+            int a = 56;
+        } finally {
+            irodsFileSystem.closeAndEatExceptions();
         }
     }
 

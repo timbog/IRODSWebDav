@@ -75,23 +75,24 @@ public class HelloWorldController {
         Date now = new Date();
         if (folder.getDownloadedTime() == null)
             folder.setDownloadedTime(now);
-        if ((((now.getTime() - folder.getDownloadedTime().getTime()) / (60 * 1000) % 60) < 10) &&
-        (folder.getProductFiles().size() != 0))
+        if (folder.checkTime(now) && (folder.getProductFiles().size() != 0)) {
             return folder.getProductFiles();
+        }
         try {
             List<CollectionAndDataObjectListingEntry> files = service.getFilesAndCollectionsUnderParentCollection(folder.getPath());
             productFiles = new ArrayList<Object>(files.size());
             for (CollectionAndDataObjectListingEntry entry: files) {
-                IRODSFile f = service.getIRODSFileForPath(entry.getFormattedAbsolutePath());
-                if (f.isDirectory()) {
-                    Folder tmp = new Folder(f.getName());
-                    tmp.setModified(f.lastModified());
+                if (entry.isCollection()) {
+                    Folder tmp = new Folder(entry.getPathOrName().substring(entry.getPathOrName().lastIndexOf("/") + 1));
+                    tmp.setModified(entry.getModifiedAt().getTime());
                     tmp.setPath(folder.getPath() + "/" + tmp.getName());
                     productFiles.add(tmp);
                 }
                 else {
-                    ProductFile newFile = new ProductFile(f.getName(), (File) f);
-                    newFile.setIRODSPath(newFile.getFile().getPath());
+                    ProductFile newFile = new ProductFile(entry.getPathOrName().substring(entry.getPathOrName().lastIndexOf("/") + 1), entry.getFormattedAbsolutePath());
+                    newFile.setLength(entry.getDataSize());
+                    newFile.setLastModified(entry.getModifiedAt());
+                    //newFile.setIRODSPath(newFile.getFile().getPath());
                     productFiles.add(newFile);
                 }
             }
@@ -106,13 +107,13 @@ public class HelloWorldController {
     @Get
     public InputStream getFile(ProductFile file) throws IOException {
         String targetIrodsFileAbsolutePath = System.getProperty("java.io.tmpdir");
-        ArrayList<String> ls = this.getFolderNames(file.getFile().getPath());
+        ArrayList<String> ls = this.getFolderNames(file.getIRODSPath());
         targetIrodsFileAbsolutePath = this.makeDirectories(ls, targetIrodsFileAbsolutePath);
         try {
             /*GetTransferRunner runner = new GetTransferRunner(service, (File) file.getFile(), targetIrodsFileAbsolutePath);
             Thread getThread = new Thread(runner);
             getThread.start();*/
-            service.getFile((File) file.getFile(), targetIrodsFileAbsolutePath);
+            service.getFile(file.getIRODSPath(), targetIrodsFileAbsolutePath);
         }
         catch (Throwable t) {
             t.printStackTrace();
@@ -128,7 +129,7 @@ public class HelloWorldController {
         targetIrodsFileAbsolutePath = this.makeDirectories(ls, targetIrodsFileAbsolutePath);
         File file = new File(targetIrodsFileAbsolutePath + "\\" + newName);
 
-        ProductFile pf = new ProductFile(newName, file);
+        ProductFile pf = new ProductFile(newName, product.getPath() + '/' + newName);
         if (bytes == null || bytes.length == 0 || files.contains(newName)) {
             return pf;
         }
@@ -170,13 +171,13 @@ public class HelloWorldController {
 
     @ContentLength
     public Long getContentLength(ProductFile file) {
-        return file.getFile().length();
+        return file.getLength();
     }
 
     @Delete
     public void pretendToDeleteImagesFolder(ProductFile file) {
         try {
-            service.deleteFileOrFolderNoForce(file.getFile().getPath());
+            service.deleteFileOrFolderNoForce(file.getIRODSPath());
             temporaryFolder.getProductFiles().remove(file);
         }
         catch (Exception ex){
@@ -197,11 +198,10 @@ public class HelloWorldController {
 
     @Move
     public void move(ProductFile pf, Folder newZone, String newName) {
-        String str = pf.getFile().getParent();
         Folder parentFolder = this.getFolderForPath(pf.getIRODSPath());
-        if (str.equals(newZone.getPath())) {
+        if (parentFolder.getPath().equals(newZone.getPath())) {
             try {
-                service.renameIRODSFileOrDirectory(str +  '/' + pf.getName(), newName);
+                service.renameIRODSFileOrDirectory(pf.getIRODSPath(), newName);
                 parentFolder.setTimeToUpdate();
             }
             catch (Exception ex) {
@@ -210,7 +210,7 @@ public class HelloWorldController {
         }
         newZone.getProductFiles().add(pf);
         try {
-            service.moveIRODSFileUnderneathNewParent(pf.getFile().getAbsolutePath(), newZone.getPath() + "/" + newName);
+            service.moveIRODSFileUnderneathNewParent(pf.getIRODSPath(), newZone.getPath() + "/" + newName);
         }
         catch (Exception ex) {
         }
@@ -234,7 +234,7 @@ public class HelloWorldController {
         if (parentPath.equals(newZone.getPath())) {
             try {
                 service.renameIRODSFileOrDirectory(zn.getPath(), newName);
-                parentZone.setTimeToUpdate();
+                zn.setName(newName);
             }
             catch (Exception ex) {
             }
@@ -258,7 +258,7 @@ public class HelloWorldController {
     public Date getModifiedDate(ProductFile pf) {
        SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
         try {
-            return sdf.parse(sdf.format(pf.getFile().lastModified()));
+            return sdf.parse(sdf.format(pf.getLastModified()));
         }
         catch (ParseException ex) {
         }
@@ -284,9 +284,9 @@ public class HelloWorldController {
                 ProductFile pf = (ProductFile) entry;
                 ArrayList<String> ls = this.getFolderNames(newZonePath);
                 String path = this.makeDirectories(ls, System.getProperty("java.io.tmpdir"));
-                service.getFile(pf.getFile(), path);
-                String se =  path + "/" + pf.getFile().getName();
-                service.putFile(new UploadDataObj(new File(path + "/" + pf.getFile().getName())), newZonePath);
+                service.getFile(pf.getIRODSPath(), path);
+                String se =  path + "/" + pf.getName();
+                service.putFile(new UploadDataObj(new File(path + "\\" + pf.getName())), newZonePath);
             }
             if (entry.getClass().getName() == "com.helloworld.Folder") {
                 Folder zn = (Folder) entry;
@@ -335,16 +335,15 @@ public class HelloWorldController {
         Folder folder = zoneDir;
         for (int i = 0; i < path.length(); i++) {
             String str = path.substring(i,i + 1);
-            boolean x = (path.substring(i,i + 1).equals( "\\"));
-            if ((path.charAt(i) != '/') && (!path.substring(i,i + 1).equals( "\\")))
+            int y = path.length() - 1;
+            if (path.charAt(i) != '/')
                 temp = temp + path.charAt(i);
-            else if (((!temp.equals(zoneDir.getName()) && (!temp.equals("")))) || (i == path.length() - 1)) {
+            if (((!temp.equals(zoneDir.getName()) && (!temp.equals("")) && (path.charAt(i) == '/'))) || (i == path.length() - 1)) {
                 for (int j = 0; j < folder.getProductFiles().size(); j++) {
                     if (folder.getProductFiles().get(j).getClass().getName().equals("com.helloworld.Folder")) {
                         Folder tempFold = (Folder) folder.getProductFiles().get(j);
                         if (tempFold.getName().equals(temp)) {
                             folder = tempFold;
-                            //break;
                         }
                     }
                 }
