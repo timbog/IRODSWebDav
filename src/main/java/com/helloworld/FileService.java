@@ -14,11 +14,15 @@ import org.irods.jargon.core.query.CollectionAndDataObjectListingEntry;
 import org.irods.jargon.core.transfer.TransferControlBlock;
 import org.irods.jargon.core.transfer.TransferStatus;
 import org.irods.jargon.core.transfer.TransferStatusCallbackListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by Bogdan on 28.07.2014.
  */
 public class FileService {
+
+    static Logger logger = LoggerFactory.getLogger(FileService.class);
 
     private static FileService instance;
     private HelloWorldController controller;
@@ -39,7 +43,7 @@ public class FileService {
 
         @Override
         public CallbackResponse transferAsksWhetherToForceOperation(String s, boolean b) {
-            return null;
+            return CallbackResponse.YES_THIS_FILE;
         }
     };
 
@@ -73,6 +77,7 @@ public class FileService {
     }
 
     public static FileService getInstance() {
+        logger.info("enter getInstance()");
         if (instance == null)
             instance = new FileService();
         return instance;
@@ -83,11 +88,13 @@ public class FileService {
             throw new Exception("null or empty irodsFilePath");
         }
         try {
+            logger.info("enter getIRODSFileForPath ({})", irodsFilePath);
             return irodsFileSystem.getIRODSFileFactory(irodsAccount).instanceIRODSFile(irodsFilePath);
         } catch (JargonException ex) {
             throw new Exception("aaa");
         } finally {
             irodsFileSystem.close(irodsAccount);
+            logger.info("exit getIRODSFileForPath ()");
         }
     }
 
@@ -134,6 +141,7 @@ public class FileService {
         if (parentCollectionAbsolutePath == null || parentCollectionAbsolutePath.isEmpty()) {
             throw new Exception("null parentCollectionAbsolutePath");
         }
+        logger.info("enter getFilesAndCollectionsUnderParentCollection ({})", parentCollectionAbsolutePath);
         try {
             CollectionAndDataObjectListAndSearchAO collectionAO = irodsFileSystem.getIRODSAccessObjectFactory()
                     .getCollectionAndDataObjectListAndSearchAO(irodsAccount);
@@ -145,6 +153,7 @@ public class FileService {
                 irodsFileSystem.close(irodsAccount);
             } catch (JargonException ex) {
             }
+            logger.info("exit getFilesAndCollectionsUnderParentCollection ()");
         }
 
     }
@@ -157,6 +166,7 @@ public class FileService {
     }*/
 
     public void getFile(String filePath, String localPath) {
+        logger.info("enter getFile {}", filePath);
         try {
             this.transferControlBlock = irodsFileSystem.getIRODSAccessObjectFactory().buildDefaultTransferControlBlockBasedOnJargonProperties();
             transferControlBlock.getTransferOptions().setIntraFileStatusCallbacks(true);
@@ -170,6 +180,7 @@ public class FileService {
         } catch (Throwable ex) {
             int a = 56;
         } finally {
+            logger.info("Exit getFile()");
             irodsFileSystem.closeAndEatExceptions();
         }
     }
