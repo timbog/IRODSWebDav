@@ -25,13 +25,12 @@ import java.text.ParseException;
 import java.util.*;
 
 import org.apache.commons.io.FileUtils;
-import org.irods.jargon.core.pub.io.IRODSFile;
 import org.irods.jargon.core.query.CollectionAndDataObjectListingEntry;
 import java.text.SimpleDateFormat;
 import java.lang.Object;
 
 @ResourceController
-public class HelloWorldController {
+public class MainController {
 
     private FileService service = FileService.getInstance();
     private List<Folder> folders = new ArrayList<Folder>();
@@ -39,7 +38,7 @@ public class HelloWorldController {
     private Folder temporaryFolder = new Folder("");
     private Folder zoneDir = new Folder("");
 
-    public HelloWorldController() {
+    public MainController() {
         service.setController(this);
     }
 
@@ -58,12 +57,12 @@ public class HelloWorldController {
     }
 
     @Root
-    public HelloWorldController getRoot() {
+    public MainController getRoot() {
         return this;
     }
 
     @ChildrenOf
-    public List<Folder> getProducts(HelloWorldController root) {
+    public List<Folder> getProducts(MainController root) {
         return folders;
     }
 
@@ -75,7 +74,7 @@ public class HelloWorldController {
         Date now = new Date();
         if (folder.getDownloadedTime() == null)
             folder.setDownloadedTime(now);
-        if (folder.checkTime(now) && (folder.getProductFiles().size() != 0)) {
+        else if (folder.checkTime(now)) {
             return folder.getProductFiles();
         }
         try {
@@ -128,8 +127,9 @@ public class HelloWorldController {
         ArrayList<String> ls = this.getFolderNames(product.getPath());
         targetIrodsFileAbsolutePath = this.makeDirectories(ls, targetIrodsFileAbsolutePath);
         File file = new File(targetIrodsFileAbsolutePath + "\\" + newName);
-
         ProductFile pf = new ProductFile(newName, product.getPath() + '/' + newName);
+        pf.setLastModified(new Date());
+        pf.setLength(bytes.length);
         if (bytes == null || bytes.length == 0 || files.contains(newName)) {
             return pf;
         }

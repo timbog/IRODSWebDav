@@ -16,7 +16,7 @@ public class DeleteTransferRunner implements Runnable{
         this.path = path;
     }
 
-    public void run()		//Этот метод будет выполняться в побочном потоке
+    public void run()
     {
         try {
             fs.deleteFileOrFolderNoForce(path);

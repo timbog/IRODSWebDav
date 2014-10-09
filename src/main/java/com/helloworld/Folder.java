@@ -62,12 +62,14 @@ public class Folder {
     public void setTimeToUpdate() {
         Calendar cal = Calendar.getInstance();
         cal.setTime(this.getDownloadedTime());
-        cal.add(Calendar.MINUTE, -11);
+        cal.add(Calendar.SECOND, -11);
         Date elevenMinutesBack = cal.getTime();
         this.setDownloadedTime(elevenMinutesBack);
     }
 
     public boolean checkTime(Date time) {
+        long a = ((time.getTime() - this.getDownloadedTime().getTime()) / 1000 % 60);
+        boolean b = a < 10;
         return (((time.getTime() - this.getDownloadedTime().getTime()) / 1000 % 60) < 10);
     }
 }

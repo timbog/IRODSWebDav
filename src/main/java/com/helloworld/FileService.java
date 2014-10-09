@@ -25,7 +25,7 @@ public class FileService {
     static Logger logger = LoggerFactory.getLogger(FileService.class);
 
     private static FileService instance;
-    private HelloWorldController controller;
+    private MainController controller;
     private IRODSAccount irodsAccount;
     private IRODSFileSystem irodsFileSystem;
     private TransferControlBlock transferControlBlock;
@@ -64,7 +64,7 @@ public class FileService {
         irodsFileSystem = sys;
     }
 
-    public void setController(HelloWorldController con) {
+    public void setController(MainController con) {
         controller = con;
     }
 
