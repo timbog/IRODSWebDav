@@ -42,15 +42,16 @@ public class IRODSAuthHandler implements AuthenticationHandler {
     public Object authenticate( Resource resource, Request request ) {
         Auth auth = request.getAuthorization();
         try {
-            IRODSAccount irodsAccount = new IRODSAccount("192.168.6.135", 1247, auth.getUser(), auth.getPassword(), "", "tempZone", "demoResc");
+            IRODSAccount irodsAccount = new IRODSAccount("192.168.1.189", 1247, auth.getUser(), auth.getPassword(), "", "tempZone", "demoResc");
             IRODSFileSystem irodsFileSystem = new IRODSFileSystem();
             DataTransferOperations dataTransferOps = irodsFileSystem.getIRODSAccessObjectFactory().getDataTransferOperations(irodsAccount);
             FileService fs = FileService.getInstance();
-            fs.setAccount(irodsAccount);
-            fs.setDataTransferOps(dataTransferOps);
-            fs.setIRODSFileSystem(irodsFileSystem);
-            if (first)
+            if (first) {
                 fs.setInitialFolders(irodsAccount.getZone());
+                fs.setAccount(irodsAccount);
+                fs.setDataTransferOps(dataTransferOps);
+                fs.setIRODSFileSystem(irodsFileSystem);
+            }
             first = false;
             return "ok";
         }
