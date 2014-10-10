@@ -25,13 +25,19 @@ import java.text.ParseException;
 import java.util.*;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.input.NullInputStream;
 import org.irods.jargon.core.pub.io.IRODSFile;
 import org.irods.jargon.core.query.CollectionAndDataObjectListingEntry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.text.SimpleDateFormat;
 import java.lang.Object;
 
 @ResourceController
 public class HelloWorldController {
+
+    static Logger logger = LoggerFactory.getLogger(HelloWorldController.class);
 
     private FileService service = FileService.getInstance();
     private List<Folder> folders = new ArrayList<Folder>();
@@ -107,8 +113,13 @@ public class HelloWorldController {
     @Get
     public InputStream getFile(ProductFile file) throws IOException {
         String targetIrodsFileAbsolutePath = System.getProperty("java.io.tmpdir");
-        ArrayList<String> ls = this.getFolderNames(file.getIRODSPath());
-        targetIrodsFileAbsolutePath = this.makeDirectories(ls, targetIrodsFileAbsolutePath);
+        ArrayList<String> ls = getFolderNames(file.getIRODSPath());
+        targetIrodsFileAbsolutePath = makeDirectories(ls, targetIrodsFileAbsolutePath);
+        File targetFile = new File(targetIrodsFileAbsolutePath, file.getName());
+        if (targetFile.exists() && !targetFile.delete()) {
+            logger.error("Cannot delete file {}", targetFile);
+            return new NullInputStream(0);
+        }
         try {
             /*GetTransferRunner runner = new GetTransferRunner(service, (File) file.getFile(), targetIrodsFileAbsolutePath);
             Thread getThread = new Thread(runner);
@@ -117,15 +128,15 @@ public class HelloWorldController {
         }
         catch (Throwable t) {
             t.printStackTrace();
-            System.out.println(t);
+            logger.error("Cannot retrieve file {}; \n---  {}", targetFile, t.getMessage());
         }
-        return FileUtils.openInputStream(new File(targetIrodsFileAbsolutePath + "\\" + file.getName()));
+        return FileUtils.openInputStream(targetFile);
     }
 
     @PutChild
     public ProductFile upload(Folder product, String newName, byte[] bytes){
         String targetIrodsFileAbsolutePath = System.getProperty("java.io.tmpdir");
-        ArrayList<String> ls = this.getFolderNames(product.getPath());
+        ArrayList<String> ls = getFolderNames(product.getPath());
         targetIrodsFileAbsolutePath = this.makeDirectories(ls, targetIrodsFileAbsolutePath);
         File file = new File(targetIrodsFileAbsolutePath + "\\" + newName);
 
