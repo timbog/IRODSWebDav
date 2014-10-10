@@ -160,12 +160,15 @@ public class MainController {
     public Folder createFolder(Folder zone, String newName) {
         Folder newZone = new Folder(newName);
         newZone.setPath(zone.getPath() + "/" + newName);
+        newZone.setDownloadedTime(new Date());
         zone.getProductFiles().add(newZone);
         try {
             service.createNewFolder(newZone.getPath());
         }
         catch (Exception ex) {
         }
+        //zone.setTimeToUpdate();
+        //this.getProductFiles(zone);
         return newZone;
     }
 
@@ -195,6 +198,24 @@ public class MainController {
 
         }
     }
+
+    /*@Delete
+    public void pretendToDeleteImagesFolder(ProductFile file) {
+        DeleteTransferRunner runner = new DeleteTransferRunner(service, file.getIRODSPath());
+        Thread deleteThread = new Thread(runner);
+        deleteThread.start();
+//service.deleteFileOrFolderNoForce(file.getFile().getPath());
+        temporaryFolder.getProductFiles().remove(file);
+    }
+
+    @Delete
+    public void pretendToDeleteImagesFolder(Folder zone) {
+        DeleteTransferRunner runner = new DeleteTransferRunner(service, zone.getPath());
+        Thread deleteThread = new Thread(runner);
+        deleteThread.start();
+        temporaryFolder.getProductFiles().remove(zone);
+        this.getProductFiles(temporaryFolder);
+    }*/
 
     @Move
     public void move(ProductFile pf, Folder newZone, String newName) {
