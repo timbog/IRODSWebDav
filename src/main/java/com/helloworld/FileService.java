@@ -102,7 +102,7 @@ public class FileService {
         String localSourceAbsolutePath = uploadData.getFile().getAbsolutePath();
         String sourceResource = irodsAccount.getDefaultStorageResource();
         try {
-            this.transferControlBlock = irodsFileSystem.getIRODSAccessObjectFactory().buildDefaultTransferControlBlockBasedOnJargonProperties();
+            transferControlBlock = irodsFileSystem.getIRODSAccessObjectFactory().buildDefaultTransferControlBlockBasedOnJargonProperties();
             transferControlBlock.getTransferOptions().setIntraFileStatusCallbacks(true);
         } catch (JargonException ex) {
         }
@@ -168,7 +168,7 @@ public class FileService {
     public void getFile(String filePath, String localPath) {
         logger.info("enter getFile {}", filePath);
         try {
-            this.transferControlBlock = irodsFileSystem.getIRODSAccessObjectFactory().buildDefaultTransferControlBlockBasedOnJargonProperties();
+            transferControlBlock = irodsFileSystem.getIRODSAccessObjectFactory().buildDefaultTransferControlBlockBasedOnJargonProperties();
             transferControlBlock.getTransferOptions().setIntraFileStatusCallbacks(true);
         } catch (JargonException ex) {
         }
@@ -176,7 +176,7 @@ public class FileService {
             DataTransferOperations dto = irodsFileSystem.getIRODSAccessObjectFactory().getDataTransferOperations(
                     irodsAccount);
             dto.getOperation(filePath, localPath, irodsAccount.getDefaultStorageResource(),
-                    listener, this.transferControlBlock);
+                    listener, transferControlBlock);
         } catch (Throwable ex) {
             int a = 56;
         } finally {

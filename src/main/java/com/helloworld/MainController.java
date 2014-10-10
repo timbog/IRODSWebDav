@@ -74,7 +74,7 @@ public class MainController {
 
     @ChildrenOf
     public List<Object> getProductFiles(Folder folder) {
-        this.temporaryFolder = folder;
+        temporaryFolder = folder;
         List<Object> productFiles = null;
         String targetIrodsFileAbsolutePath = System.getProperty("java.io.tmpdir");
         Date now = new Date();
@@ -136,7 +136,7 @@ public class MainController {
     public ProductFile upload(Folder product, String newName, byte[] bytes){
         String targetIrodsFileAbsolutePath = System.getProperty("java.io.tmpdir");
         ArrayList<String> ls = getFolderNames(product.getPath());
-        targetIrodsFileAbsolutePath = this.makeDirectories(ls, targetIrodsFileAbsolutePath);
+        targetIrodsFileAbsolutePath = makeDirectories(ls, targetIrodsFileAbsolutePath);
         File file = new File(targetIrodsFileAbsolutePath + "\\" + newName);
         ProductFile pf = new ProductFile(newName, product.getPath() + '/' + newName);
         pf.setLastModified(new Date());
@@ -179,7 +179,7 @@ public class MainController {
         catch (Exception ex) {
         }
         //zone.setTimeToUpdate();
-        //this.getProductFiles(zone);
+        //getProductFiles(zone);
         return newZone;
     }
 
@@ -225,12 +225,12 @@ public class MainController {
         Thread deleteThread = new Thread(runner);
         deleteThread.start();
         temporaryFolder.getProductFiles().remove(zone);
-        this.getProductFiles(temporaryFolder);
+        getProductFiles(temporaryFolder);
     }*/
 
     @Move
     public void move(ProductFile pf, Folder newZone, String newName) {
-        Folder parentFolder = this.getFolderForPath(pf.getIRODSPath());
+        Folder parentFolder = getFolderForPath(pf.getIRODSPath());
         if (parentFolder.getPath().equals(newZone.getPath())) {
             try {
                 service.renameIRODSFileOrDirectory(pf.getIRODSPath(), newName);
@@ -262,7 +262,7 @@ public class MainController {
             }
         }
         String parentPath = str.substring(0, temp);
-        Folder parentZone = this.getFolderForPath(parentPath);
+        Folder parentZone = getFolderForPath(parentPath);
         if (parentPath.equals(newZone.getPath())) {
             try {
                 service.renameIRODSFileOrDirectory(zn.getPath(), newName);
@@ -309,13 +309,13 @@ public class MainController {
     }
 
     private void moveFiles(Folder oldZone, String newZonePath) throws Exception {
-        List<Object> list = this.getProductFiles(oldZone);
+        List<Object> list = getProductFiles(oldZone);
         for (Object entry:list) {
             String str = entry.getClass().getName();
             if (entry.getClass().getName() == "com.helloworld.ProductFile") {
                 ProductFile pf = (ProductFile) entry;
-                ArrayList<String> ls = this.getFolderNames(newZonePath);
-                String path = this.makeDirectories(ls, System.getProperty("java.io.tmpdir"));
+                ArrayList<String> ls = getFolderNames(newZonePath);
+                String path = makeDirectories(ls, System.getProperty("java.io.tmpdir"));
                 service.getFile(pf.getIRODSPath(), path);
                 String se =  path + "/" + pf.getName();
                 service.putFile(new UploadDataObj(new File(path + "\\" + pf.getName())), newZonePath);
