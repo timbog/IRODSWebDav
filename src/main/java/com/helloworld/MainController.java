@@ -113,6 +113,7 @@ public class MainController {
 
     @Get
     public InputStream getFile(ProductFile file) throws IOException {
+        this.putEmptyFiles();
         String targetIrodsFileAbsolutePath = System.getProperty("java.io.tmpdir");
         ArrayList<String> ls = getFolderNames(file.getIRODSPath());
         targetIrodsFileAbsolutePath = makeDirectories(ls, targetIrodsFileAbsolutePath);
