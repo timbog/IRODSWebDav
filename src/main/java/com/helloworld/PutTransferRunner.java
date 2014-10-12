@@ -7,18 +7,18 @@ import java.io.File;
  */
 public class PutTransferRunner implements Runnable{
     private FileService fs;
-    private File file;
+    private String localPath;
     private Folder parentFold;
 
-    public PutTransferRunner(FileService fls, File file, Folder fold)
+    public PutTransferRunner(FileService fls, String localPath, Folder fold)
     {
         this.fs = fls;
-        this.file = file;
+        this.localPath = localPath;
         this.parentFold = fold;
     }
     public void run()
     {
-        fs.putFile(new UploadDataObj(file), parentFold.getPath());
+        fs.putFile(localPath, parentFold.getPath());
         parentFold.setTimeToUpdate();
     }
 }

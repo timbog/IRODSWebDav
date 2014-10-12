@@ -40,9 +40,10 @@ public class MainController {
 
     private FileService service = FileService.getInstance();
     private List<Folder> folders = new ArrayList<Folder>();
-    private HashSet<String> files = new HashSet<String>();
     private Folder temporaryFolder = new Folder("");
     private Folder zoneDir = new Folder("");
+    private List<String> filesToPutLocalPaths = new ArrayList<String>();
+    private List<String> filesToPutIRODSPaths = new ArrayList<String>();
 
     public MainController() {
         service.setController(this);
@@ -75,6 +76,7 @@ public class MainController {
     @ChildrenOf
     public List<Object> getProductFiles(Folder folder) {
         temporaryFolder = folder;
+        this.putEmptyFiles();
         List<Object> productFiles = null;
         String targetIrodsFileAbsolutePath = System.getProperty("java.io.tmpdir");
         Date now = new Date();
@@ -141,17 +143,18 @@ public class MainController {
         ProductFile pf = new ProductFile(newName, product.getPath() + '/' + newName);
         pf.setLastModified(new Date());
         pf.setLength(bytes.length);
-        if (bytes == null || bytes.length == 0 || files.contains(newName)) {
-            return pf;
-        }
-        files.add(newName);
-
         try {
             file.createNewFile();
         }
         catch (IOException ex) {
         }
-
+        if ((bytes == null || bytes.length == 0) && (!filesToPutLocalPaths.contains(targetIrodsFileAbsolutePath))) {
+            filesToPutIRODSPaths.add(product.getPath());
+            filesToPutLocalPaths.add(targetIrodsFileAbsolutePath + "\\" + newName);
+            return pf;
+        }
+        filesToPutLocalPaths.remove(targetIrodsFileAbsolutePath + "\\" + newName);
+        filesToPutIRODSPaths.remove(product.getPath());
         try {
             FileOutputStream fos = new FileOutputStream(file.getAbsolutePath());
             fos.write(bytes);
@@ -159,7 +162,7 @@ public class MainController {
         }
         catch (Exception e) {
         }
-        PutTransferRunner runner = new PutTransferRunner(service, file, product);
+        PutTransferRunner runner = new PutTransferRunner(service, targetIrodsFileAbsolutePath + "\\" + newName, product);
         Thread putThread = new Thread(runner);
         putThread.start();
         product.getProductFiles().add(pf);
@@ -276,13 +279,17 @@ public class MainController {
         parentZone.getProductFiles().remove(zn);
         try {
             service.createNewFolder(newZone.getPath() + "/" + newName);
+            Folder newFold = new Folder(newName);
+            newFold.setPath(newZone.getPath() + "/" + newName);
+            newFold.setModified(zn.getModified());
+            newFold.setDownloadedTime(new Date());
+            newZone.getProductFiles().add(newFold);
             moveFiles(zn, newZone.getPath() + "/" + newName);
             service.deleteFileOrFolderNoForce(zn.getPath());
         }
         catch (Exception ex) {
             System.out.print("fdfdf");
         }
-        //parentZone.setTimeToUpdate();
         newZone.setTimeToUpdate();
     }
 
@@ -317,8 +324,10 @@ public class MainController {
                 ArrayList<String> ls = getFolderNames(newZonePath);
                 String path = makeDirectories(ls, System.getProperty("java.io.tmpdir"));
                 service.getFile(pf.getIRODSPath(), path);
-                String se =  path + "/" + pf.getName();
-                service.putFile(new UploadDataObj(new File(path + "\\" + pf.getName())), newZonePath);
+                Folder fold = getFolderForPath(newZonePath);
+                PutTransferRunner runner = new PutTransferRunner(service, path + "\\" + pf.getName(), fold);
+                Thread putThread = new Thread(runner);
+                putThread.start();
             }
             if (entry.getClass().getName() == "com.helloworld.Folder") {
                 Folder zn = (Folder) entry;
@@ -387,6 +396,16 @@ public class MainController {
         return folder;
     }
 
+    private void putEmptyFiles() {
+        for (int i = 0; i < filesToPutIRODSPaths.size(); i++) {
+            Folder fold = getFolderForPath(filesToPutIRODSPaths.get(i));
+            PutTransferRunner runner = new PutTransferRunner(service, filesToPutLocalPaths.get(i), fold);
+            Thread putThread = new Thread(runner);
+            putThread.start();
+        }
+        filesToPutIRODSPaths.clear();
+        filesToPutLocalPaths.clear();
+    }
 
     /*public List<Object> getChildren (IRODSZone zn) {
         List<Object> productFiles = null;

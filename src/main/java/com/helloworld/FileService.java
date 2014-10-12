@@ -98,8 +98,8 @@ public class FileService {
         }
     }
 
-    public void putFile(UploadDataObj uploadData, String path) {
-        String localSourceAbsolutePath = uploadData.getFile().getAbsolutePath();
+    public void putFile(String localPath, String iRODSPath) {
+        String pathToPut = localPath.substring(localPath.lastIndexOf("\\") + 1);
         String sourceResource = irodsAccount.getDefaultStorageResource();
         try {
             transferControlBlock = irodsFileSystem.getIRODSAccessObjectFactory().buildDefaultTransferControlBlockBasedOnJargonProperties();
@@ -107,10 +107,8 @@ public class FileService {
         } catch (JargonException ex) {
         }
         try {
-            String s = path + '/' + uploadData.getFile().getName();
-            String s2 = uploadData.getFile().getName();
-            dataTransferOps.putOperation(localSourceAbsolutePath,
-                    path + "/" + uploadData.getFile().getName(), sourceResource, new TransferStatusCallbackListener() {
+            dataTransferOps.putOperation(localPath,
+                    iRODSPath, sourceResource, new TransferStatusCallbackListener() {
                         @Override
                         public FileStatusCallbackResponse statusCallback(TransferStatus transferStatus) throws JargonException {
                             return null;
