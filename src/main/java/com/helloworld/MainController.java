@@ -169,12 +169,13 @@ public class MainController {
         Thread putThread = new Thread(runner);
         putThread.start();
         product.getProductFiles().remove(pf);
+        pf.setLength(bytes.length);
         product.getProductFiles().add(pf);
         pf.setIRODSPath(product.getPath() + getSlashForTemporaryOS() + newName);
         return pf;
     }
 
-    @PutChild
+    /*@PutChild
     public ProductFile upload(ProductFile pf, byte[] bytes) {
         String targetIrodsFileAbsolutePath = System.getProperty("java.io.tmpdir");
         ArrayList<String> ls = getFolderNames(pf.getIRODSPath());
@@ -188,13 +189,15 @@ public class MainController {
         catch (Exception e) {
         }
         String s = pf.getIRODSPath().substring(0, pf.getIRODSPath().lastIndexOf("/"));
-        Folder product = getFolderForPath(pf.getIRODSPath().substring(0, pf.getIRODSPath().lastIndexOf("/") - 1));
+        Folder product = getFolderForPath(pf.getIRODSPath().substring(0, pf.getIRODSPath().lastIndexOf("/")));
         PutTransferRunner runner = new PutTransferRunner(service, targetIrodsFileAbsolutePath + "/" + pf.getName(), product);
         Thread putThread = new Thread(runner);
         putThread.start();
+        pf.setLength(bytes.length);
+
         product.getProductFiles().add(pf);
         return pf;
-    }
+    }*/
 
     @MakeCollection
     public Folder createFolder(Folder zone, String newName) {
