@@ -115,7 +115,7 @@ public class MainController {
     public InputStream getFile(ProductFile file) throws IOException {
         this.putEmptyFiles();
         String targetIrodsFileAbsolutePath = System.getProperty("java.io.tmpdir");
-        ArrayList<String> ls = getFolderNames(file.getIRODSPath());
+        ArrayList<String> ls = getFolderNames(file.getIRODSPath().substring(file.getIRODSPath().lastIndexOf(getSlashForTemporaryOS()) + 1));
         targetIrodsFileAbsolutePath = makeDirectories(ls, targetIrodsFileAbsolutePath);
         File targetFile = new File(targetIrodsFileAbsolutePath, file.getName());
         if (targetFile.exists() && !targetFile.delete()) {
@@ -140,21 +140,23 @@ public class MainController {
         String targetIrodsFileAbsolutePath = System.getProperty("java.io.tmpdir");
         ArrayList<String> ls = getFolderNames(product.getPath());
         targetIrodsFileAbsolutePath = makeDirectories(ls, targetIrodsFileAbsolutePath);
-        File file = new File(targetIrodsFileAbsolutePath + "\\" + newName);
-        ProductFile pf = new ProductFile(newName, product.getPath() + '/' + newName);
+        File file = new File(targetIrodsFileAbsolutePath + getSlashForTemporaryOS() + newName);
+        ProductFile pf = new ProductFile(newName, product.getPath() + getSlashForTemporaryOS() + newName);
         pf.setLastModified(new Date());
         pf.setLength(bytes.length);
         try {
             file.createNewFile();
         }
         catch (IOException ex) {
+            int a =56;
         }
         if ((bytes == null || bytes.length == 0) && (!filesToPutLocalPaths.contains(targetIrodsFileAbsolutePath))) {
             filesToPutIRODSPaths.add(product.getPath());
-            filesToPutLocalPaths.add(targetIrodsFileAbsolutePath + "\\" + newName);
+            filesToPutLocalPaths.add(targetIrodsFileAbsolutePath + getSlashForTemporaryOS() + newName);
+            product.getProductFiles().add(pf);
             return pf;
         }
-        filesToPutLocalPaths.remove(targetIrodsFileAbsolutePath + "\\" + newName);
+        filesToPutLocalPaths.remove(targetIrodsFileAbsolutePath + getSlashForTemporaryOS() + newName);
         filesToPutIRODSPaths.remove(product.getPath());
         try {
             FileOutputStream fos = new FileOutputStream(file.getAbsolutePath());
@@ -163,11 +165,34 @@ public class MainController {
         }
         catch (Exception e) {
         }
-        PutTransferRunner runner = new PutTransferRunner(service, targetIrodsFileAbsolutePath + "\\" + newName, product);
+        PutTransferRunner runner = new PutTransferRunner(service, targetIrodsFileAbsolutePath + "/" + newName, product);
+        Thread putThread = new Thread(runner);
+        putThread.start();
+        product.getProductFiles().remove(pf);
+        product.getProductFiles().add(pf);
+        pf.setIRODSPath(product.getPath() + getSlashForTemporaryOS() + newName);
+        return pf;
+    }
+
+    @PutChild
+    public ProductFile upload(ProductFile pf, byte[] bytes) {
+        String targetIrodsFileAbsolutePath = System.getProperty("java.io.tmpdir");
+        ArrayList<String> ls = getFolderNames(pf.getIRODSPath());
+        targetIrodsFileAbsolutePath = makeDirectories(ls, targetIrodsFileAbsolutePath);
+        byte[] test = bytes;
+        try {
+            FileOutputStream fos = new FileOutputStream(pf.getIRODSPath());
+            fos.write(bytes);
+            fos.close();
+        }
+        catch (Exception e) {
+        }
+        String s = pf.getIRODSPath().substring(0, pf.getIRODSPath().lastIndexOf("/"));
+        Folder product = getFolderForPath(pf.getIRODSPath().substring(0, pf.getIRODSPath().lastIndexOf("/") - 1));
+        PutTransferRunner runner = new PutTransferRunner(service, targetIrodsFileAbsolutePath + "/" + pf.getName(), product);
         Thread putThread = new Thread(runner);
         putThread.start();
         product.getProductFiles().add(pf);
-        pf.setIRODSPath(product.getPath() + "/" + newName);
         return pf;
     }
 
@@ -265,7 +290,7 @@ public class MainController {
                 break;
             }
         }
-        String parentPath = str.substring(0, temp);
+        String parentPath = str.substring(0, zn.getPath().lastIndexOf("/"));
         Folder parentZone = getFolderForPath(parentPath);
         if (parentPath.equals(newZone.getPath())) {
             try {
@@ -326,7 +351,7 @@ public class MainController {
                 String path = makeDirectories(ls, System.getProperty("java.io.tmpdir"));
                 service.getFile(pf.getIRODSPath(), path);
                 Folder fold = getFolderForPath(newZonePath);
-                PutTransferRunner runner = new PutTransferRunner(service, path + "\\" + pf.getName(), fold);
+                PutTransferRunner runner = new PutTransferRunner(service, path + getSlashForTemporaryOS() + pf.getName(), fold);
                 Thread putThread = new Thread(runner);
                 putThread.start();
             }
@@ -365,8 +390,8 @@ public class MainController {
                 basePath = basePath + nameArray.get(i);
             }
             else {
-                boolean bool = new File(basePath + "\\" + nameArray.get(i)).mkdirs();
-                basePath = basePath + "\\" + nameArray.get(i);
+                boolean bool = new File(basePath + getSlashForTemporaryOS() + nameArray.get(i)).mkdirs();
+                basePath = basePath + getSlashForTemporaryOS() + nameArray.get(i);
             }
         }
         return basePath;
@@ -401,11 +426,19 @@ public class MainController {
         for (int i = 0; i < filesToPutIRODSPaths.size(); i++) {
             Folder fold = getFolderForPath(filesToPutIRODSPaths.get(i));
             PutTransferRunner runner = new PutTransferRunner(service, filesToPutLocalPaths.get(i), fold);
+            boolean bl = new File(filesToPutLocalPaths.get(0)).exists();
             Thread putThread = new Thread(runner);
             putThread.start();
         }
         filesToPutIRODSPaths.clear();
         filesToPutLocalPaths.clear();
+    }
+
+    private String getSlashForTemporaryOS() {
+        if (System.getProperty("java.io.tmpdir").contains("/")) {
+            return "/";
+        }
+        else return "\\";
     }
 
     /*public List<Object> getChildren (IRODSZone zn) {
