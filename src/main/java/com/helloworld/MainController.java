@@ -76,7 +76,9 @@ public class MainController {
     @ChildrenOf
     public List<Object> getProductFiles(Folder folder) {
         temporaryFolder = folder;
-        this.putEmptyFiles();
+        if (filesToPutLocalPaths.size() != 0) {
+            this.putEmptyFiles();
+        }
         List<Object> productFiles = null;
         String targetIrodsFileAbsolutePath = System.getProperty("java.io.tmpdir");
         Date now = new Date();
@@ -113,7 +115,9 @@ public class MainController {
 
     @Get
     public InputStream getFile(ProductFile file) throws IOException {
-        this.putEmptyFiles();
+        if (filesToPutLocalPaths.size() != 0) {
+            this.putEmptyFiles();
+        }
         String targetIrodsFileAbsolutePath = System.getProperty("java.io.tmpdir");
         ArrayList<String> ls = getFolderNames(file.getIRODSPath().substring(file.getIRODSPath().lastIndexOf(getSlashForTemporaryOS()) + 1));
         targetIrodsFileAbsolutePath = makeDirectories(ls, targetIrodsFileAbsolutePath);
@@ -123,9 +127,6 @@ public class MainController {
             return new NullInputStream(0);
         }
         try {
-            /*GetTransferRunner runner = new GetTransferRunner(service, (File) file.getFile(), targetIrodsFileAbsolutePath);
-            Thread getThread = new Thread(runner);
-            getThread.start();*/
             service.getFile(file.getIRODSPath(), targetIrodsFileAbsolutePath);
         }
         catch (Throwable t) {
@@ -426,13 +427,16 @@ public class MainController {
     }
 
     private void putEmptyFiles() {
+        List<Folder> parentFolders = new ArrayList<Folder>();
         for (int i = 0; i < filesToPutIRODSPaths.size(); i++) {
+            parentFolders.add(getFolderForPath(filesToPutIRODSPaths.get(i)));
             Folder fold = getFolderForPath(filesToPutIRODSPaths.get(i));
-            PutTransferRunner runner = new PutTransferRunner(service, filesToPutLocalPaths.get(i), fold);
-            boolean bl = new File(filesToPutLocalPaths.get(0)).exists();
+            /*PutTransferRunner runner = new PutTransferRunner(service, filesToPutLocalPaths.get(i), fold);
+            //boolean bl = new File(filesToPutLocalPaths.get(0)).exists();
             Thread putThread = new Thread(runner);
-            putThread.start();
+            putThread.start();*/
         }
+        PutFilesControl control = new PutFilesControl(service, parentFolders, filesToPutLocalPaths);
         filesToPutIRODSPaths.clear();
         filesToPutLocalPaths.clear();
     }
