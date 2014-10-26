@@ -76,7 +76,7 @@ public class MainController {
     @ChildrenOf
     public List<Object> getProductFiles(Folder folder) {
         temporaryFolder = folder;
-        this.putEmptyFiles();
+        //putEmptyFiles();
         List<Object> productFiles = null;
         String targetIrodsFileAbsolutePath = System.getProperty("java.io.tmpdir");
         Date now = new Date();
@@ -111,9 +111,10 @@ public class MainController {
         return productFiles;
     }
 
+
     @Get
     public InputStream getFile(ProductFile file) throws IOException {
-        this.putEmptyFiles();
+//        putEmptyFiles();
         String targetIrodsFileAbsolutePath = System.getProperty("java.io.tmpdir");
         ArrayList<String> ls = getFolderNames(file.getIRODSPath());
         targetIrodsFileAbsolutePath = makeDirectories(ls, targetIrodsFileAbsolutePath);
