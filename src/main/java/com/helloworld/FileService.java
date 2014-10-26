@@ -43,7 +43,7 @@ public class FileService {
 
         @Override
         public CallbackResponse transferAsksWhetherToForceOperation(String s, boolean b) {
-            return CallbackResponse.YES_THIS_FILE;
+            return null;
         }
     };
 

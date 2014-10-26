@@ -17,8 +17,8 @@ import static org.junit.Assert.assertTrue;
 public class FileServiceTest {
 
     public static final String TMP_PATH = System.getProperty("java.io.tmpdir");
-    public static final String TEST_FILE_NAME_1 = "testWEBDAV.txt";
-    public static final String TEST_FILE_NAME_2 = "testWEBDAV1.txt";
+    public static final String TEST_FILE_NAME_1 = "plo.txt";
+    public static final String TEST_FILE_NAME_2 = "ppl.txt";
     public static final File TMP_FILE_1 = new File(TMP_PATH, TEST_FILE_NAME_1);
     public static final File TMP_FILE_2 = new File(TMP_PATH, TEST_FILE_NAME_2);
 
@@ -27,7 +27,7 @@ public class FileServiceTest {
     @Before
     public void setUp() throws Exception {
         fs =  FileService.getInstance();
-        IRODSAccount irodsAccount = new IRODSAccount("10.25.9.191", 1247, "rods", "skolkovo", "", "skolkovo", "demoResc");
+        IRODSAccount irodsAccount = new IRODSAccount("192.168.6.138", 1247, "rods", "rods", "", "tempZone", "");
         IRODSFileSystem irodsFileSystem = new IRODSFileSystem();
         DataTransferOperations dataTransferOps = irodsFileSystem.getIRODSAccessObjectFactory().getDataTransferOperations(irodsAccount);
         //fs.setInitialFolders(irodsAccount.getZone());
@@ -46,7 +46,7 @@ public class FileServiceTest {
     @Test
     public void testGetFileFromDefaultResc() throws Exception {
         assertFalse("tmp file should not exist", TMP_FILE_1.exists());
-        IRODSFile f = fs.getIRODSFileForPath("/skolkovo/home/rods/" + TEST_FILE_NAME_1);
+        IRODSFile f = fs.getIRODSFileForPath("/tempZone/home/rods/" + TEST_FILE_NAME_1);
         fs.getFile(f.getPath(), TMP_PATH);
         assertTrue("tmp file should exist", TMP_FILE_1.exists());
     }
@@ -54,7 +54,7 @@ public class FileServiceTest {
     @Test
     public void testGetFileFromNotDefaultResc() throws Exception {
         assertFalse("tmp file should not exist", TMP_FILE_2.exists());
-        IRODSFile f = fs.getIRODSFileForPath("/skolkovo/home/rods/" + TEST_FILE_NAME_2);
+        IRODSFile f = fs.getIRODSFileForPath("/tempZone/home/rods/" + TEST_FILE_NAME_2);
         fs.getFile(f.getPath(), TMP_PATH);
         assertTrue("tmp file should exist", TMP_FILE_2.exists());
     }
