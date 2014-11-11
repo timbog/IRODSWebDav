@@ -77,7 +77,7 @@ public class MainController {
     public List<Object> getProductFiles(Folder folder) {
         temporaryFolder = folder;
         if (filesToPutLocalPaths.size() != 0) {
-            this.putEmptyFiles();
+            putEmptyFiles();
         }
         List<Object> productFiles = null;
         String targetIrodsFileAbsolutePath = System.getProperty("java.io.tmpdir");
@@ -113,10 +113,11 @@ public class MainController {
         return productFiles;
     }
 
+
     @Get
     public InputStream getFile(ProductFile file) throws IOException {
         if (filesToPutLocalPaths.size() != 0) {
-            this.putEmptyFiles();
+            putEmptyFiles();
         }
         String targetIrodsFileAbsolutePath = System.getProperty("java.io.tmpdir");
         ArrayList<String> ls = getFolderNames(file.getIRODSPath().substring(file.getIRODSPath().lastIndexOf(getSlashForTemporaryOS()) + 1));
