@@ -21,12 +21,12 @@
             <param-name>authenticationHandlers</param-name>
             <param-value>com.helloworld.IRODSAuthHandler</param-value>
         </init-param>
-        <!--
-        <init-param>
+
+        <!--<init-param>
             <param-name>contextPath</param-name>
             <param-value>/webdav</param-value>
-        </init-param>		
-        -->
+        </init-param>	-->
+
     </filter>
 
     <filter-mapping>

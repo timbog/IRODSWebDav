@@ -36,15 +36,10 @@
             <plugin>
                 <groupId>org.apache.tomcat.maven</groupId>
                 <artifactId>tomcat7-maven-plugin</artifactId>
+                <configuration><path>/</path></configuration>
                 <version>2.2</version>
-                <configuration>
-                    <path>/${project.build.finalName}</path>
-                    <update>true</update>
-                    <url>http://localhost:8080/manager/text</url>
-                    <username>tomcat</username>
-                    <password>tomcatuser</password>
-                </configuration>
             </plugin>
+
         </plugins>
     </build>
 
